@@ -97,17 +97,13 @@ class Main(qt.QMainWindow):
             self.image_shifts_abs = []
             self.toLog("Aligning...")
             for idx, image in enumerate(self.absorbanceImage):
-                if idx != self.middle_index:
-                    shift_values, error, diffphase = phase_cross_correlation(referenceImage,
-                                                image,
-                                                upsample_factor=upsample_factor)
-                    self.image_shifts.append(shift)
-                    self.absorbanceImage[idx] = shift(image, shift_values, mode='reflect')
-                    self.image_shifts_abs.append(np.linalg.norm(shift_values))
+                shift_values, error, diffphase = phase_cross_correlation(referenceImage,
+                                            image,
+                                            upsample_factor=upsample_factor)
+                self.image_shifts.append(shift)
+                self.absorbanceImage[idx] = shift(image, shift_values, mode='reflect')
+                self.image_shifts_abs.append(np.linalg.norm(shift_values))
                     
-                else:
-                    self.image_shifts.append(np.zeros(2))
-                    self.image_shifts_abs.append(0)
             self.reloadDisplay()
             self.toLog("Aligning... done")
 
