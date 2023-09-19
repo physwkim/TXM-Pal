@@ -32,12 +32,16 @@ class Main(qt.QMainWindow):
         self.projImage = None
         self.middle_index = 0
         self.image_shifts = []
+        self.thickness_image = None
 
         qt.loadUi('ui/main.ui', self)
 
-        self.widgetPlot1D.setGraphTitle("Shift")
-        self.widgetPlot1D.setGraphXLabel("Energy (eV)")
-        self.widgetPlot1D.setGraphYLabel("Shift (pixel)")
+        self.setWindowTitle("PAL XANES")
+        self.widgetImageStack.getPlotWidget().setDataBackgroundColor([0,0,0])
+
+        self.widgetPlotShift.setGraphTitle("Shift")
+        self.widgetPlotShift.setGraphXLabel("Energy (eV)")
+        self.widgetPlotShift.setGraphYLabel("Shift (pixel)")
 
         self.pushButtonSelectPath.clicked.connect(self.select_path)
         self.pushButtonLoad.setCallable(self.load)
@@ -57,6 +61,42 @@ class Main(qt.QMainWindow):
 
         self.pushButtonCrop.setCallable(self.cropImage)
 
+        self.pushButtonThickness.clicked.connect(self.calcThickness)
+        self.pushButtonSelectMask.clicked.connect(self.select_mask)
+        self.pushButtonFitting.clicked.connect(self.calcPeakFitting)
+
+    def calcPeakFitting(self):
+        if self.thickness_image is not None:
+            self.toLog("Calculating peak fitting...")
+            self.peak_image = np.zeros_like(self.thickness_image)
+            fitModel = self.comboBoxFitModel.currentText()
+
+            if os.path.exists(self.selected_mask_path):
+                mask = fabio.open(self.selected_mask_path).data
+            else:
+                mask = np.ones_like(self.thickness_image)
+            
+            idx_arr = np.where(mask > 0)
+
+            for idx, row in enumerate(idx_arr[0]):
+                col = idx_arr[1][idx]
+                # self.peak_image[row, col] = self.fitPeak(self.energy_list, self.thickness_image[:, row, col])
+
+
+    def calcThickness(self):
+        if self.absorbanceImage is not None:
+            self.toLog("Calculating thickness...")
+            num_pre_edge = self.spinBoxNumPreEdge.value()
+            num_post_edge = self.spinBoxNumPostEdge.value()
+            image_pre_edge = np.mean(self.absorbanceImage[:num_pre_edge], axis=0)
+            image_post_edge = np.mean(self.absorbanceImage[-num_post_edge:], axis=0)
+            thickness = image_post_edge - image_pre_edge
+            self.thickness_image = np.array([thickness])
+            self.widgetImageStack.setStack(self.thickness_image)
+            plot = self.widgetImageStack.getPlotWidget()
+            plot.setGraphTitle("Thickness")
+            self.toLog("Calculating thickness... done")
+
     def cropImage(self):
         xStart = self.spinBoxXStart.value()
         xStop = self.spinBoxXStop.value()
@@ -72,8 +112,6 @@ class Main(qt.QMainWindow):
         _submit(self.widgetImageStack.getPlotWidget().toggleROI, False)
         self.reloadDisplay()
         _submit(self.widgetImageStack.resetZoom)
-
-
 
     def updateRoi(self, origin, size):
         """Update ROI"""
@@ -107,7 +145,7 @@ class Main(qt.QMainWindow):
             self.reloadDisplay()
             self.toLog("Aligning... done")
 
-            _submit(self.widgetPlot1D.addCurve, self.energy_list, self.image_shifts_abs, legend="shift_abs", color='blue')
+            _submit(self.widgetPlotShift.addCurve, self.energy_list, self.image_shifts_abs, legend="shift_abs", color='blue')
 
     def applyFiltering(self):
         filter_type = self.comboBoxFilterType.currentText()
@@ -122,7 +160,7 @@ class Main(qt.QMainWindow):
             self.reloadDisplay()
 
     def updateEnergy(self, energy):
-        _submit(self.widgetPlot1D.addXMarker,
+        _submit(self.widgetPlotShift.addXMarker,
                 energy,
                 legend="XMarker",
                 color='red',
@@ -189,7 +227,7 @@ class Main(qt.QMainWindow):
                 self.spinBoxRefNum.setMaximum(len(self.energy_list) - 1)
                 self.spinBoxRefNum.setValue(self.middle_index)
 
-                self.widgetPlot1D.setGraphXLimits(minEnergy, maxEnergy)
+                self.widgetPlotShift.setGraphXLimits(minEnergy, maxEnergy)
 
                 temp_image_path = os.path.join(proj_path, image_dict[self.energy_list[0]][0])
                 image_shape = tifffile.imread(temp_image_path).shape
@@ -282,6 +320,29 @@ class Main(qt.QMainWindow):
             _submit(self.lineEditFilePath.setText, str(self.selected_path))
             save_path = str(Path(self.selected_path).parent)
             qsettings.setValue('selected_path', save_path)
+
+    def select_mask(self):
+        """ Select mask path """
+        # Load previous path
+        qsettings = qt.QSettings('settings.ini', qt.QSettings.IniFormat)
+        previous_selection = qsettings.value('selected_mask_path', BASE_PATH)
+
+        # Get user input
+        self.selected_mask_path = qt.QFileDialog.getOpenFileName(
+                                        self,
+                                        "Select a mask file",
+                                        previous_selection,
+                                        "Images (*.tif *.tiff *.edf)")[0]
+        print(f"selected_mask_path : {self.selected_mask_path}")
+        # Selection canceled
+        if self.selected_mask_path == "":
+            return
+
+        elif os.path.exists(self.selected_mask_path):
+            # Display current path
+            _submit(self.lineEditMaskPath.setText, str(self.selected_mask_path))
+            save_path = str(Path(self.selected_mask_path).parent)
+            qsettings.setValue('selected_mask_path', save_path)
 
 if __name__ == '__main__':
     app = qt.QApplication(sys.argv)
