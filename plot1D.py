@@ -32,9 +32,9 @@ class Plot1DCustom(PlotWindow):
         # Retrieve PlotWidget's plot area widget
         plotArea = self.getWidgetHandle()
 
-        self.setDefaultPlotPoints(True)
-        self.getGridAction().setChecked(True)
-        self.setGraphGrid(True)
+        self.setDefaultPlotPoints(False)
+        self.getGridAction().setChecked(False)
+        self.setGraphGrid(False)
 
     def resetZoom(self, dataMargins=None):
         """Reset the plot limits to the bounds of the data and redraw the plot.

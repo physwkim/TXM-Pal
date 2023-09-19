@@ -22,6 +22,8 @@ class StackView(qt.QWidget):
     # Signal emitter when the frame number has changed.
     sigFrameChanged = qt.Signal(int)
 
+    sigEnergyKeV= qt.Signal(float)
+
     def __init__(self, parent=None, *args, **kwargs):
         super(StackView, self).__init__(parent, *args, **kwargs)
 
@@ -36,6 +38,8 @@ class StackView(qt.QWidget):
 
         self._auto_update = True
         self._reset = False
+
+        self._energy_list = []
 
         # Stack browser
         self._browser_label = qt.QLabel("Stack:")
@@ -173,7 +177,12 @@ class StackView(qt.QWidget):
 
     def _updateTitle(self):
         frame_idx = self._browser.value()
-        _submit(self._plot.setGraphTitle, "image {:d}".format(frame_idx))
+        if len(self._energy_list) > frame_idx:
+            energy = self._energy_list[frame_idx]
+            self.sigEnergyKeV.emit(energy)
+            _submit(self._plot.setGraphTitle, f"image {frame_idx:d} [{energy:.2f} eV]")
+        else:
+            _submit(self._plot.setGraphTitle, f"image {frame_idx:d}")
 
 
 if __name__ == '__main__':
