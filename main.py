@@ -13,6 +13,9 @@ from skimage.registration import phase_cross_correlation
 
 from silx.gui import qt
 from silx.gui.utils.concurrent import submitToQtMainThread as _submit
+import fabio
+
+from utils import fitPeak
 
 BASE_PATH = os.path.expanduser('~')
 
@@ -70,6 +73,8 @@ class Main(qt.QMainWindow):
             self.toLog("Calculating peak fitting...")
             self.peak_image = np.zeros_like(self.thickness_image)
             fitModel = self.comboBoxFitModel.currentText()
+            fitPoints = self.spinBoxFitPoints.value()
+            algorithm = self.comboBoxFitModel.currentText()
 
             if os.path.exists(self.selected_mask_path):
                 mask = fabio.open(self.selected_mask_path).data
@@ -80,8 +85,16 @@ class Main(qt.QMainWindow):
 
             for idx, row in enumerate(idx_arr[0]):
                 col = idx_arr[1][idx]
-                # self.peak_image[row, col] = self.fitPeak(self.energy_list, self.thickness_image[:, row, col])
+                # TODO: Add fitting algorithm
+                spectrum = self.absorbanceImage[:, row, col]
+                maxIdx = np.argmax(spectrum)
+                idx_start = maxIdx - fitPoints // 2
+                idx_stop = maxIdx + fitPoints // 2
+                xdata = self.energy_list[idx_start:idx_stop]
+                ydata = spectrum[idx_start:idx_stop]
+                cen = fitPeak(xdata, ydata, algorithm=algorithm)
 
+                self.peak_image[row, col] = cen
 
     def calcThickness(self):
         if self.absorbanceImage is not None:

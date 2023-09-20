@@ -50,7 +50,7 @@
             <enum>QTabWidget::North</enum>
            </property>
            <property name="currentIndex">
-            <number>1</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="tab">
             <attribute name="title">
@@ -762,6 +762,36 @@
                        <string>Gaussian</string>
                       </property>
                      </item>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_15">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>298</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_16">
+                     <property name="text">
+                      <string>Fit Points</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QSpinBox" name="spinBoxFitPoints">
+                     <property name="maximum">
+                      <number>9000</number>
+                     </property>
+                     <property name="value">
+                      <number>10</number>
+                     </property>
                     </widget>
                    </item>
                    <item>
