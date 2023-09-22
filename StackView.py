@@ -126,12 +126,15 @@ class StackView(qt.QWidget):
                         "2D arrays.")
                 stack = ListOfImages(stack)
 
+        if len(stack.shape) == 2:
+            stack = numpy.array([stack])
+
         assert len(stack.shape) == 3, "data must be 3D"
 
         self._stack = stack
 
         # init plot
-        self._updateTitle()
+        _submit(self._updateTitle)
 
         if stack is not None:
             size = len(self._stack)

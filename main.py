@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 import time
+from math import floor, ceil
 
 import tifffile
 import numpy as np
@@ -10,10 +11,15 @@ import datetime
 from scipy.ndimage import median_filter
 from scipy.ndimage import shift
 from skimage.registration import phase_cross_correlation
+from matplotlib.colors import hsv_to_rgb
+import dask
+from dask import delayed
 
 from silx.gui import qt
 from silx.gui.utils.concurrent import submitToQtMainThread as _submit
 import fabio
+
+import h5py
 
 from utils import fitPeak
 
@@ -36,8 +42,12 @@ class Main(qt.QMainWindow):
         self.middle_index = 0
         self.image_shifts = []
         self.thickness_image = None
+        self.concentration_image = None
 
         qt.loadUi('ui/main.ui', self)
+
+        # Adjust splitter ratio
+        self.splitterMain.setSizes([100, 900])
 
         self.setWindowTitle("PAL XANES")
         self.widgetImageStack.getPlotWidget().setDataBackgroundColor([0,0,0])
@@ -67,11 +77,69 @@ class Main(qt.QMainWindow):
         self.pushButtonThickness.clicked.connect(self.calcThickness)
         self.pushButtonSelectMask.clicked.connect(self.select_mask)
         self.pushButtonFitting.clicked.connect(self.calcPeakFitting)
+        self.pushButtonConcentration.clicked.connect(self.calcConcentration)
+        self.pushButtonSaving.clicked.connect(self.save_data)
+
+    def save_data(self):
+        with h5py.File("/home/stevek/data1/temp.h5", "w") as f:
+            entry_1 = f.create_group("entry_1")
+            entry_1.create_dataset("absorbance", data=self.absorbanceImage)
+            entry_1.create_dataset("background", data=self.backImage)
+            entry_1.create_dataset("projection", data=self.projImage)
+            entry_1.create_dataset("thickness", data=self.thickness_image)
+            entry_1.create_dataset("concentration", data=self.concentration_image)
+            entry_1.create_dataset("peak", data=self.peak_image)
+            entry_1.create_dataset("peak_energy_mean", data=self.peak_energy_mean)
+            entry_1.create_dataset("peak_energy_std", data=self.peak_energy_std)
+
+    def calcConcentration(self):
+        self.toLog("Calculating concentration...")
+        startE = self.doubleSpinBoxStartE.value()
+        stopE = self.doubleSpinBoxStopE.value()
+        conc = (self.peak_image - startE) / (stopE - startE)
+        self.thickness_image[conc < 0] = 0
+        self.thickness_image[conc > 1.05] = 0
+        negative_mask = np.logical_and(conc<0 , np.logical_not(np.isnan(conc)))
+        ceil_mask = np.logical_and(conc>1.05, np.logical_not(np.isnan(conc)))
+
+        conc[negative_mask] = 0
+        conc[ceil_mask] = 1
+
+        shape = conc.shape
+
+        # Fill H, S, V channels
+        hsv = np.zeros((shape[0], shape[1], 3))
+        hsv[:, :, 0] = conc * (1/3)
+        hsv[:, :, 1] = np.ones_like(conc)
+        hsv[:, :, 2] = self.thickness_image / np.nanmax(self.thickness_image)
+
+        # Replace Nan With 0
+        # hsv = np.nan_to_num(hsv, nan=0.0)
+
+        # Convert HSV to RGB
+        rgb = hsv_to_rgb(hsv)
+
+        # Remove Unmasked Pixels
+        rgb[:,:,0][np.where(np.isnan(conc))] = 0
+        rgb[:,:,1][np.where(np.isnan(conc))] = 0
+        rgb[:,:,2][np.where(np.isnan(conc))] = 0
+        
+        # Clip RGB values
+        rgb = np.clip(rgb, 0, 1)
+        self.concentration_image = rgb
+
+        plot = self.widgetImageStack.getPlotWidget()
+        _submit(plot.addImage, self.concentration_image)
+        _submit(plot.setGraphTitle, f"Concentraion")
+        self.toLog("Calculating concentration... done")
 
     def calcPeakFitting(self):
         if self.thickness_image is not None:
             self.toLog("Calculating peak fitting...")
             self.peak_image = np.zeros_like(self.thickness_image)
+            self.peak_iamge = self.peak_image.fill(np.nan)
+            cutOff = self.spinBoxCutOff.value()
+            print(f"peak_image : {self.peak_image}, shape : {self.peak_image.shape}")
             fitModel = self.comboBoxFitModel.currentText()
             fitPoints = self.spinBoxFitPoints.value()
             algorithm = self.comboBoxFitModel.currentText()
@@ -85,16 +153,39 @@ class Main(qt.QMainWindow):
 
             for idx, row in enumerate(idx_arr[0]):
                 col = idx_arr[1][idx]
-                # TODO: Add fitting algorithm
                 spectrum = self.absorbanceImage[:, row, col]
+                # print(f"row : {row}, col : {col}, spectrum : {spectrum}")
                 maxIdx = np.argmax(spectrum)
                 idx_start = maxIdx - fitPoints // 2
                 idx_stop = maxIdx + fitPoints // 2
+
+                # print(f"maxIdx : {maxIdx}, idx_start : {idx_start}, idx_stop : {idx_stop}")
                 xdata = self.energy_list[idx_start:idx_stop]
                 ydata = spectrum[idx_start:idx_stop]
+                # print(f"xdata : {xdata}, ydata : {ydata}")
+                if len(xdata) == 0 or len(ydata) == 0:
+                    continue
+                
                 cen = fitPeak(xdata, ydata, algorithm=algorithm)
+                # cen = delayed(fitPeak)(xdata, ydata)
+                # print(f"cen : {cen}")
 
                 self.peak_image[row, col] = cen
+
+            # self.peak_image = dask.compute(self.peak_image)
+
+            # Reject outliers
+            peak_average = np.nanmean(self.peak_image)
+            self.peak_image[np.abs(self.peak_image - peak_average) > cutOff ] = np.nan
+
+            self.peak_energy_mean = np.nanmean(self.peak_image)
+            self.peak_energy_std = np.nanstd(self.peak_image)
+
+            _submit(self.widgetImageStack.setStack, self.peak_image)
+
+            plot = self.widgetImageStack.getPlotWidget()
+            _submit(plot.setGraphTitle, f"Apex Energies, Mean : {self.peak_energy_mean:.2f} eV, Std : {self.peak_energy_std:.2f} eV")
+            self.toLog("Calculating peak fitting... done")
 
     def calcThickness(self):
         if self.absorbanceImage is not None:
@@ -104,10 +195,10 @@ class Main(qt.QMainWindow):
             image_pre_edge = np.mean(self.absorbanceImage[:num_pre_edge], axis=0)
             image_post_edge = np.mean(self.absorbanceImage[-num_post_edge:], axis=0)
             thickness = image_post_edge - image_pre_edge
-            self.thickness_image = np.array([thickness])
+            self.thickness_image = thickness
             self.widgetImageStack.setStack(self.thickness_image)
             plot = self.widgetImageStack.getPlotWidget()
-            plot.setGraphTitle("Thickness")
+            _submit(plot.setGraphTitle, "Thickness")
             self.toLog("Calculating thickness... done")
 
     def cropImage(self):
@@ -122,9 +213,9 @@ class Main(qt.QMainWindow):
         self.toLog("Image cropped")
 
         # Hide, Reload, and Reset zoom
-        _submit(self.widgetImageStack.getPlotWidget().toggleROI, False)
+        #_submit(self.widgetImageStack.getPlotWidget().toggleROI, False)
         self.reloadDisplay()
-        _submit(self.widgetImageStack.resetZoom)
+        #_submit(self.widgetImageStack.resetZoom)
 
     def updateRoi(self, origin, size):
         """Update ROI"""
@@ -151,9 +242,26 @@ class Main(qt.QMainWindow):
                 shift_values, error, diffphase = phase_cross_correlation(referenceImage,
                                             image,
                                             upsample_factor=upsample_factor)
-                self.image_shifts.append(shift)
-                self.absorbanceImage[idx] = shift(image, shift_values, mode='reflect')
+                self.image_shifts.append(shift_values)
+                self.absorbanceImage[idx] = shift(image, shift_values, mode='constant', cval=-10)
                 self.image_shifts_abs.append(np.linalg.norm(shift_values))
+
+            self.image_shifts = np.array(self.image_shifts)
+            shiftXMin = floor(np.min(self.image_shifts[:, 1]))
+            shiftXMax = ceil(np.max(self.image_shifts[:, 1]))
+            shiftYMin = floor(np.min(self.image_shifts[:, 0]))
+            shiftYMax = ceil(np.max(self.image_shifts[:, 0]))
+
+            # print(f"shiftXMin : {shiftXMin}, shiftXMax : {shiftXMax}, shiftYMin : {shiftYMin}, shiftYMax : {shiftYMax}")
+            # Crop images
+            if shiftYMin < 0 and shiftXMin < 0:
+                self.absorbanceImage = self.absorbanceImage[:, shiftYMax:shiftYMin, shiftXMax:shiftXMin]
+            elif shiftYMin < 0 and shiftXMin >= 0:
+                self.absorbanceImage = self.absorbanceImage[:, shiftYMax:shiftYMin, shiftXMax:]
+            elif shiftYMin >= 0 and shiftXMin < 0:
+                self.absorbanceImage = self.absorbanceImage[:, shiftYMax:, shiftXMax:shiftXMin]
+            else:
+                self.absorbanceImage = self.absorbanceImage[:, shiftYMax:, shiftXMax:]
                     
             self.reloadDisplay()
             self.toLog("Aligning... done")
@@ -238,9 +346,9 @@ class Main(qt.QMainWindow):
                 # Set reference image
                 self.spinBoxRefNum.setMinimum(0)
                 self.spinBoxRefNum.setMaximum(len(self.energy_list) - 1)
-                self.spinBoxRefNum.setValue(self.middle_index)
+                _submit(self.spinBoxRefNum.setValue, self.middle_index)
 
-                self.widgetPlotShift.setGraphXLimits(minEnergy, maxEnergy)
+                _submit(self.widgetPlotShift.setGraphXLimits, minEnergy, maxEnergy)
 
                 temp_image_path = os.path.join(proj_path, image_dict[self.energy_list[0]][0])
                 image_shape = tifffile.imread(temp_image_path).shape
