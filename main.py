@@ -36,6 +36,7 @@ class Main(qt.QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.basename = ""
         self.absorbanceImage = None
         self.backImage = None
         self.projImage = None
@@ -56,9 +57,11 @@ class Main(qt.QMainWindow):
         self.widgetPlotShift.setGraphXLabel("Energy (eV)")
         self.widgetPlotShift.setGraphYLabel("Shift (pixel)")
 
-        self.pushButtonSelectPath.clicked.connect(self.select_path)
-        self.pushButtonLoad.setCallable(self.load)
+        self.pushButtonSelectPath.clicked.connect(self.select_load_path)
+        self.pushButtonSelectSavePath.clicked.connect(self.select_save_path)
 
+        self.pushButtonLoad.setCallable(self.load)
+        
         self.checkBoxAbsorbance.clicked.connect(self.reloadDisplay)
         self.checkBoxBackground.clicked.connect(self.reloadDisplay)
         self.checkBoxRawImage.clicked.connect(self.reloadDisplay)
@@ -78,19 +81,49 @@ class Main(qt.QMainWindow):
         self.pushButtonSelectMask.clicked.connect(self.select_mask)
         self.pushButtonFitting.clicked.connect(self.calcPeakFitting)
         self.pushButtonConcentration.clicked.connect(self.calcConcentration)
-        self.pushButtonSaving.clicked.connect(self.save_data)
+        
+        self.pushButtonSaving.clicked.connect(self.saveData)
 
-    def save_data(self):
-        with h5py.File("/home/stevek/data1/temp.h5", "w") as f:
+    def saveData(self):
+        save_path = self.lineEditSavePath.text()
+        
+        if save_path == "":
+            self.toLog("Please select save path")
+            return
+        
+        # Create directory if not exists
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+
+        re_pat = re.compile(r"[0-9]+")
+        last_num = -1
+
+        with os.scandir(save_path) as it:
+            for item in it:
+                if item.is_file() and item.name.find(self.basename) >= -1:
+                    idx = item.name[:-3].split('_result_')[-1]
+                    if re_pat.match(idx):
+
+                        try:
+                            if int(idx) > last_num:
+                                last_num = int(idx)
+                        except:
+                            ...
+            num = last_num + 1
+
+        save_file = os.path.join(save_path, f"{self.basename}_result_{num:d}.h5")
+
+        with h5py.File(save_file, "w") as f:
             entry_1 = f.create_group("entry_1")
             entry_1.create_dataset("absorbance", data=self.absorbanceImage)
-            entry_1.create_dataset("background", data=self.backImage)
             entry_1.create_dataset("projection", data=self.projImage)
             entry_1.create_dataset("thickness", data=self.thickness_image)
             entry_1.create_dataset("concentration", data=self.concentration_image)
             entry_1.create_dataset("peak", data=self.peak_image)
             entry_1.create_dataset("peak_energy_mean", data=self.peak_energy_mean)
             entry_1.create_dataset("peak_energy_std", data=self.peak_energy_std)
+
+        self.toLog(f"Result saved to {save_file}")
 
     def calcConcentration(self):
         self.toLog("Calculating concentration...")
@@ -139,7 +172,6 @@ class Main(qt.QMainWindow):
             self.peak_image = np.zeros_like(self.thickness_image)
             self.peak_iamge = self.peak_image.fill(np.nan)
             cutOff = self.spinBoxCutOff.value()
-            print(f"peak_image : {self.peak_image}, shape : {self.peak_image.shape}")
             fitModel = self.comboBoxFitModel.currentText()
             fitPoints = self.spinBoxFitPoints.value()
             algorithm = self.comboBoxFitModel.currentText()
@@ -213,9 +245,9 @@ class Main(qt.QMainWindow):
         self.toLog("Image cropped")
 
         # Hide, Reload, and Reset zoom
-        #_submit(self.widgetImageStack.getPlotWidget().toggleROI, False)
+        _submit(self.widgetImageStack.getPlotWidget().toggleROI, False)
         self.reloadDisplay()
-        #_submit(self.widgetImageStack.resetZoom)
+        _submit(self.widgetImageStack.resetZoom)
 
     def updateRoi(self, origin, size):
         """Update ROI"""
@@ -312,6 +344,7 @@ class Main(qt.QMainWindow):
         if os.path.exists(self.selected_path):
             if self.selected_path.endswith("_proj") or self.selected_path.endswith("_back"):
                 base_path = self.selected_path[:-5]
+                self.basename = os.path.basename(base_path)
 
                 # Load projection images
                 proj_path = base_path + "_proj"
@@ -419,7 +452,7 @@ class Main(qt.QMainWindow):
 
                 self.toLog(f"loading done")
 
-    def select_path(self):
+    def select_load_path(self):
         """ Select data save path """
         # Load previous path
         qsettings = qt.QSettings('settings.ini', qt.QSettings.IniFormat)
@@ -428,7 +461,7 @@ class Main(qt.QMainWindow):
         # Get user input
         self.selected_path = qt.QFileDialog.getExistingDirectory(
                                         self,
-                                        "Select a save path",
+                                        "Select a load path",
                                         previous_selection,
                                         qt.QFileDialog.ShowDirsOnly | qt.QFileDialog.DontUseNativeDialog)
         
@@ -439,8 +472,32 @@ class Main(qt.QMainWindow):
         elif os.path.exists(self.selected_path):
             # Display current path
             _submit(self.lineEditFilePath.setText, str(self.selected_path))
+            _submit(self.lineEditSavePath.setText, str(os.path.dirname(self.selected_path)))
             save_path = str(Path(self.selected_path).parent)
             qsettings.setValue('selected_path', save_path)
+
+    def select_save_path(self):
+        """ Select data save path """
+        # Load previous path
+        qsettings = qt.QSettings('settings.ini', qt.QSettings.IniFormat)
+        previous_selection = qsettings.value('selected_save_path', self.selected_path)
+
+        # Get user input
+        self.selected_save_path = qt.QFileDialog.getExistingDirectory(
+                                        self,
+                                        "Select a save path",
+                                        previous_selection,
+                                        qt.QFileDialog.ShowDirsOnly | qt.QFileDialog.DontUseNativeDialog)
+        
+        # Selection canceled
+        if self.selected_save_path == "":
+            return
+
+        elif os.path.exists(self.selected_save_path):
+            # Display current path
+            _submit(self.lineEditSavePath.setText, str(self.selected_save_path))
+            save_path = str(Path(self.selected_save_path).parent)
+            qsettings.setValue('selected_save_path', save_path)
 
     def select_mask(self):
         """ Select mask path """
