@@ -130,8 +130,9 @@ class Main(qt.QMainWindow):
         startE = self.doubleSpinBoxStartE.value()
         stopE = self.doubleSpinBoxStopE.value()
         conc = (self.peak_image - startE) / (stopE - startE)
-        self.thickness_image[conc < 0] = 0
-        self.thickness_image[conc > 1.05] = 0
+        thickness_img = self.thickness_image.copy()
+        thickness_img[conc < 0] = 0
+        thickness_img[conc > 1.05] = 0
         negative_mask = np.logical_and(conc<0 , np.logical_not(np.isnan(conc)))
         ceil_mask = np.logical_and(conc>1.05, np.logical_not(np.isnan(conc)))
 
@@ -144,7 +145,7 @@ class Main(qt.QMainWindow):
         hsv = np.zeros((shape[0], shape[1], 3))
         hsv[:, :, 0] = conc * (1/3)
         hsv[:, :, 1] = np.ones_like(conc)
-        hsv[:, :, 2] = self.thickness_image / np.nanmax(self.thickness_image)
+        hsv[:, :, 2] = thickness_img / np.nanmax(thickness_img)
 
         # Replace Nan With 0
         # hsv = np.nan_to_num(hsv, nan=0.0)
