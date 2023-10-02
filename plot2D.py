@@ -24,7 +24,7 @@ class Plot2D(_Plot2D):
     """
     sigRoiUpdated = qt.Signal(object, object)
 
-    def __init__(self, parent=None, backend='gl'):
+    def __init__(self, parent=None, backend='matplotlib'):
         super().__init__(parent=parent, backend=backend)
 
         # ROI manager
