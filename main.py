@@ -12,8 +12,6 @@ from scipy.ndimage import median_filter
 from scipy.ndimage import shift
 from skimage.registration import phase_cross_correlation
 from matplotlib.colors import hsv_to_rgb
-import dask
-from dask import delayed
 
 from silx.gui import qt
 from silx.gui.utils.concurrent import submitToQtMainThread as _submit
@@ -61,11 +59,11 @@ class Main(qt.QMainWindow):
         self.pushButtonSelectSavePath.clicked.connect(self.select_save_path)
 
         self.pushButtonLoad.setCallable(self.load)
-        
+
         self.checkBoxAbsorbance.clicked.connect(self.reloadDisplay)
         self.checkBoxBackground.clicked.connect(self.reloadDisplay)
         self.checkBoxRawImage.clicked.connect(self.reloadDisplay)
-        
+
         self.widgetImageStack.sigEnergyKeV.connect(self.updateEnergy)
 
         self.pushButtonFiltering.setCallable(self.applyFiltering)
@@ -81,16 +79,16 @@ class Main(qt.QMainWindow):
         self.pushButtonSelectMask.clicked.connect(self.select_mask)
         self.pushButtonFitting.clicked.connect(self.calcPeakFitting)
         self.pushButtonConcentration.clicked.connect(self.calcConcentration)
-        
+
         self.pushButtonSaving.clicked.connect(self.saveData)
 
     def saveData(self):
         save_path = self.lineEditSavePath.text()
-        
+
         if save_path == "":
             self.toLog("Please select save path")
             return
-        
+
         # Create directory if not exists
         if not os.path.exists(save_path):
             os.makedirs(save_path)
@@ -157,7 +155,7 @@ class Main(qt.QMainWindow):
         rgb[:,:,0][np.where(np.isnan(conc))] = 0
         rgb[:,:,1][np.where(np.isnan(conc))] = 0
         rgb[:,:,2][np.where(np.isnan(conc))] = 0
-        
+
         # Clip RGB values
         rgb = np.clip(rgb, 0, 1)
         self.concentration_image = rgb
@@ -181,7 +179,7 @@ class Main(qt.QMainWindow):
                 mask = fabio.open(self.selected_mask_path).data
             else:
                 mask = np.ones_like(self.thickness_image)
-            
+
             idx_arr = np.where(mask > 0)
 
             for idx, row in enumerate(idx_arr[0]):
@@ -198,14 +196,12 @@ class Main(qt.QMainWindow):
                 # print(f"xdata : {xdata}, ydata : {ydata}")
                 if len(xdata) == 0 or len(ydata) == 0:
                     continue
-                
+
                 cen = fitPeak(xdata, ydata, algorithm=algorithm)
                 # cen = delayed(fitPeak)(xdata, ydata)
                 # print(f"cen : {cen}")
 
                 self.peak_image[row, col] = cen
-
-            # self.peak_image = dask.compute(self.peak_image)
 
             # Reject outliers
             peak_average = np.nanmean(self.peak_image)
@@ -295,7 +291,7 @@ class Main(qt.QMainWindow):
                 self.absorbanceImage = self.absorbanceImage[:, shiftYMax:, shiftXMax:shiftXMin]
             else:
                 self.absorbanceImage = self.absorbanceImage[:, shiftYMax:, shiftXMax:]
-                    
+
             self.reloadDisplay()
             self.toLog("Aligning... done")
 
@@ -303,7 +299,7 @@ class Main(qt.QMainWindow):
 
     def applyFiltering(self):
         filter_type = self.comboBoxFilterType.currentText()
-        filter_size = self.spinBoxFilterSize.value()
+        filter_size = self.comboBoxFilterSize.currentIndex() * 2 + 3
         self.toLog("Filtering...")
         if filter_type == 'Median':
             kernel_size = (1, filter_size, filter_size)
@@ -387,7 +383,7 @@ class Main(qt.QMainWindow):
                 temp_image_path = os.path.join(proj_path, image_dict[self.energy_list[0]][0])
                 image_shape = tifffile.imread(temp_image_path).shape
                 imageStack = np.zeros((len(self.energy_list), image_shape[0], image_shape[1]), dtype=np.float32)
-                
+
                 self.toLog(f"loading images...")
                 _time = time.time()
                 for idx, energy in enumerate(self.energy_list):
@@ -398,6 +394,7 @@ class Main(qt.QMainWindow):
                     imageStack[idx] = np.mean(images, axis=0)
 
                 self.projImage = imageStack
+                # print(f"projImage : {self.projImage}")
 
                 self.toLog(f"loading images... done ({time.time() - _time})")
 
@@ -432,12 +429,13 @@ class Main(qt.QMainWindow):
                     backImageStack[idx] = np.mean(images, axis=0)
 
                 self.backImage = backImageStack
+                # print(f"backImage : {self.backImage}")
 
                 self.toLog(f"back_images ... done ({time.time() - _time})")
 
                 # Calculate absorbance
                 self.absorbanceImage = -np.log(self.projImage / self.backImage)
-                
+
                 # Get Selection and display
                 if self.checkBoxAbsorbance.isChecked():
                     imgStack = self.absorbanceImage
@@ -445,6 +443,9 @@ class Main(qt.QMainWindow):
                     imgStack = self.backImage
                 else:
                     imgStack = self.projImage
+
+
+                # print(f"absorbanceImage : {self.absorbanceImage}")
 
                 _submit(self.widgetImageStack.setStack, imgStack)
                 _submit(self.widgetImageStack.resetZoom)
@@ -465,7 +466,7 @@ class Main(qt.QMainWindow):
                                         "Select a load path",
                                         previous_selection,
                                         qt.QFileDialog.ShowDirsOnly | qt.QFileDialog.DontUseNativeDialog)
-        
+
         # Selection canceled
         if self.selected_path == "":
             return
@@ -489,7 +490,7 @@ class Main(qt.QMainWindow):
                                         "Select a save path",
                                         previous_selection,
                                         qt.QFileDialog.ShowDirsOnly | qt.QFileDialog.DontUseNativeDialog)
-        
+
         # Selection canceled
         if self.selected_save_path == "":
             return
