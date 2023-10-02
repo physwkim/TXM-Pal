@@ -43,11 +43,10 @@ class Plot2D(_Plot2D):
 
         self._roiManager.addRoi(self._roi)
 
-        self._roiAction = qt.QAction(icons.getQIcon('image-select-box'), 'Toggle ROI', self)
-        self._roiAction.setCheckable(True)
-        self._roiAction.toggled.connect(self.toggleROI)
-
-        self._toolbar.addAction(self._roiAction)
+        # self._roiAction = qt.QAction(icons.getQIcon('image-select-box'), 'Toggle ROI', self)
+        # self._roiAction.setCheckable(True)
+        # self._roiAction.toggled.connect(self.toggleROI)
+        # self._toolbar.addAction(self._roiAction)
 
         # Set tif as default selection on save action
         try:

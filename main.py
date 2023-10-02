@@ -64,6 +64,8 @@ class Main(qt.QMainWindow):
         self.checkBoxBackground.clicked.connect(self.reloadDisplay)
         self.checkBoxRawImage.clicked.connect(self.reloadDisplay)
 
+        self.checkBoxROI.stateChanged.connect(self.toggleROI)
+
         self.widgetImageStack.sigEnergyKeV.connect(self.updateEnergy)
 
         self.pushButtonFiltering.setCallable(self.applyFiltering)
@@ -81,6 +83,12 @@ class Main(qt.QMainWindow):
         self.pushButtonConcentration.clicked.connect(self.calcConcentration)
 
         self.pushButtonSaving.clicked.connect(self.saveData)
+
+    def toggleROI(self, state):
+        if state == qt.Qt.Checked:
+            self.widgetImageStack.getPlotWidget().toggleROI(True)
+        else:
+            self.widgetImageStack.getPlotWidget().toggleROI(False)
 
     def saveData(self):
         save_path = self.lineEditSavePath.text()

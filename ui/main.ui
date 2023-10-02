@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1480</width>
+    <width>1360</width>
     <height>975</height>
    </rect>
   </property>
@@ -201,6 +201,13 @@
                     <string>9</string>
                    </property>
                   </item>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="checkBoxROI">
+                  <property name="text">
+                   <string>ROI</string>
+                  </property>
                  </widget>
                 </item>
                 <item>
@@ -1067,7 +1074,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1480</width>
+     <width>1360</width>
      <height>20</height>
     </rect>
    </property>
