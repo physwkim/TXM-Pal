@@ -10,6 +10,7 @@ import numpy as np
 import datetime
 from scipy.ndimage import median_filter
 from scipy.ndimage import shift
+from scipy.ndimage import affine_transform
 from skimage.registration import phase_cross_correlation
 from matplotlib.colors import hsv_to_rgb
 
@@ -20,6 +21,7 @@ import fabio
 import h5py
 
 from utils import fitPeak
+from utils import magnification_corr_factors
 
 BASE_PATH = os.path.expanduser('~')
 
@@ -42,6 +44,7 @@ class Main(qt.QMainWindow):
         self.image_shifts = []
         self.thickness_image = None
         self.concentration_image = None
+        self.selected_mask_path = ""
 
         qt.loadUi('ui/main.ui', self)
 
@@ -69,6 +72,7 @@ class Main(qt.QMainWindow):
         self.widgetImageStack.sigEnergyKeV.connect(self.updateEnergy)
 
         self.pushButtonFiltering.setCallable(self.applyFiltering)
+        self.pushButtonMagCorr.clicked.connect(self.magnificationCorrection)
         self.pushButtonAlign.setCallable(self.alignImages)
 
         # ROI for cropping
@@ -84,12 +88,28 @@ class Main(qt.QMainWindow):
 
         self.pushButtonSaving.clicked.connect(self.saveData)
 
+<<<<<<< HEAD
     def toggleROI(self, state):
         if state == qt.Qt.Checked:
             self.widgetImageStack.getPlotWidget().toggleROI(True)
         else:
             self.widgetImageStack.getPlotWidget().toggleROI(False)
 
+||||||| parent of 4c85890 (Fix magnification correction and added magnfication value selection)
+=======
+    def magnificationCorrection(self):
+        if self.absorbanceImage is not None:
+            self.toLog("Correcting magnification...")
+            corr_factors = magnification_corr_factors(self.energy_list.copy())
+            for idx, img in enumerate(self.absorbanceImage):
+                cf = corr_factors[idx]
+                print(f"idx : {idx}, factor : {cf}")
+                scaleMat = np.array([[cf,0,0], [0, cf, 0], [0, 0, 1]])
+                self.absorbanceImage[idx] = affine_transform(img, scaleMat)
+            self.reloadDisplay()
+            self.toLog("Correcting magnification... done")
+
+>>>>>>> 4c85890 (Fix magnification correction and added magnfication value selection)
     def saveData(self):
         save_path = self.lineEditSavePath.text()
 
@@ -177,7 +197,7 @@ class Main(qt.QMainWindow):
         if self.thickness_image is not None:
             self.toLog("Calculating peak fitting...")
             self.peak_image = np.zeros_like(self.thickness_image)
-            self.peak_iamge = self.peak_image.fill(np.nan)
+            self.peak_image.fill(np.nan)
             cutOff = self.spinBoxCutOff.value()
             fitModel = self.comboBoxFitModel.currentText()
             fitPoints = self.spinBoxFitPoints.value()
@@ -207,16 +227,19 @@ class Main(qt.QMainWindow):
 
                 cen = fitPeak(xdata, ydata, algorithm=algorithm)
                 # cen = delayed(fitPeak)(xdata, ydata)
-                # print(f"cen : {cen}")
+                # print(f"peak_image : {self.peak_image}, cen : {cen}")
 
                 self.peak_image[row, col] = cen
 
             # Reject outliers
             peak_average = np.nanmean(self.peak_image)
-            self.peak_image[np.abs(self.peak_image - peak_average) > cutOff ] = np.nan
+            # self.peak_image[np.abs(self.peak_image - peak_average) > cutOff ] = np.nan
 
-            self.peak_energy_mean = np.nanmean(self.peak_image)
-            self.peak_energy_std = np.nanstd(self.peak_image)
+            # Average and standard deviation
+            peak_image = self.peak_image.copy()
+            peak_image[np.abs(self.peak_image - peak_average) > cutOff ] = np.nan
+            self.peak_energy_mean = np.nanmean(peak_image)
+            self.peak_energy_std = np.nanstd(peak_image)
 
             _submit(self.widgetImageStack.setStack, self.peak_image)
 
