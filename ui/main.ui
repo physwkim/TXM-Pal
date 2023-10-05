@@ -6,16 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-<<<<<<< HEAD
-    <width>1360</width>
-    <height>975</height>
-||||||| parent of 4c85890 (Fix magnification correction and added magnfication value selection)
-    <width>1480</width>
-    <height>975</height>
-=======
     <width>1314</width>
     <height>927</height>
->>>>>>> 4c85890 (Fix magnification correction and added magnfication value selection)
    </rect>
   </property>
   <property name="windowTitle">
@@ -1077,13 +1069,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-<<<<<<< HEAD
      <width>1360</width>
-||||||| parent of 4c85890 (Fix magnification correction and added magnfication value selection)
-     <width>1480</width>
-=======
-     <width>1314</width>
->>>>>>> 4c85890 (Fix magnification correction and added magnfication value selection)
      <height>20</height>
     </rect>
    </property>

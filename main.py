@@ -88,28 +88,23 @@ class Main(qt.QMainWindow):
 
         self.pushButtonSaving.clicked.connect(self.saveData)
 
-<<<<<<< HEAD
     def toggleROI(self, state):
         if state == qt.Qt.Checked:
             self.widgetImageStack.getPlotWidget().toggleROI(True)
         else:
             self.widgetImageStack.getPlotWidget().toggleROI(False)
 
-||||||| parent of 4c85890 (Fix magnification correction and added magnfication value selection)
-=======
     def magnificationCorrection(self):
         if self.absorbanceImage is not None:
             self.toLog("Correcting magnification...")
             corr_factors = magnification_corr_factors(self.energy_list.copy())
             for idx, img in enumerate(self.absorbanceImage):
                 cf = corr_factors[idx]
-                print(f"idx : {idx}, factor : {cf}")
                 scaleMat = np.array([[cf,0,0], [0, cf, 0], [0, 0, 1]])
                 self.absorbanceImage[idx] = affine_transform(img, scaleMat)
             self.reloadDisplay()
             self.toLog("Correcting magnification... done")
 
->>>>>>> 4c85890 (Fix magnification correction and added magnfication value selection)
     def saveData(self):
         save_path = self.lineEditSavePath.text()
 
