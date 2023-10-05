@@ -23,6 +23,8 @@ import h5py
 from utils import fitPeak
 from utils import magnification_corr_factors
 
+from roiTableWidget import RoiTableWidget
+
 BASE_PATH = os.path.expanduser('~')
 
 class Main(qt.QMainWindow):
@@ -54,9 +56,14 @@ class Main(qt.QMainWindow):
         self.setWindowTitle("PAL XANES")
         self.widgetImageStack.getPlotWidget().setDataBackgroundColor([0,0,0])
 
+        # Shift Plot
         self.widgetPlotShift.setGraphTitle("Shift")
         self.widgetPlotShift.setGraphXLabel("Energy (eV)")
         self.widgetPlotShift.setGraphYLabel("Shift (pixel)")
+
+        # Spectrum Plot
+        self.widgetPlotSpectrum.setGraphXLabel("Energy (eV)")
+        self.widgetPlotSpectrum.setGraphYLabel("Intensity (a.u.)")
 
         self.pushButtonSelectPath.clicked.connect(self.select_load_path)
         self.pushButtonSelectSavePath.clicked.connect(self.select_save_path)
@@ -74,6 +81,12 @@ class Main(qt.QMainWindow):
         self.pushButtonFiltering.setCallable(self.applyFiltering)
         self.pushButtonMagCorr.clicked.connect(self.magnificationCorrection)
         self.pushButtonAlign.setCallable(self.alignImages)
+
+        # ROI Table
+        self.roiTableWidget = RoiTableWidget(plot=self.widgetImageStack.getPlotWidget())
+        layout = self.widgetRoiTableHolder.parent().layout()
+        layout.replaceWidget(self.widgetRoiTableHolder, self.roiTableWidget)
+
 
         # ROI for cropping
         imgWidget = self.widgetImageStack.getPlotWidget()
