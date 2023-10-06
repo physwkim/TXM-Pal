@@ -87,15 +87,19 @@ class Main(qt.QMainWindow):
         layout = self.widgetRoiTableHolder.parent().layout()
         layout.replaceWidget(self.widgetRoiTableHolder, self.roiTableWidget)
 
-
         # ROI for cropping
         imgWidget = self.widgetImageStack.getPlotWidget()
         imgWidget.sigRoiUpdated.connect(self.updateRoi)
 
+        # Mask Tools
+        self.maskToolsWidget = imgWidget.getMaskToolsDockWidget().widget()
+        self.maskToolsWidget.otherToolGroup.hide()
+        self.frameMask.layout().addWidget(self.maskToolsWidget)
+
         self.pushButtonCrop.setCallable(self.cropImage)
 
         self.pushButtonThickness.clicked.connect(self.calcThickness)
-        self.pushButtonSelectMask.clicked.connect(self.select_mask)
+        # self.pushButtonSelectMask.clicked.connect(self.select_mask)
         self.pushButtonFitting.clicked.connect(self.calcPeakFitting)
         self.pushButtonConcentration.clicked.connect(self.calcConcentration)
 
@@ -211,11 +215,7 @@ class Main(qt.QMainWindow):
             fitPoints = self.spinBoxFitPoints.value()
             algorithm = self.comboBoxFitModel.currentText()
 
-            if os.path.exists(self.selected_mask_path):
-                mask = fabio.open(self.selected_mask_path).data
-            else:
-                mask = np.ones_like(self.thickness_image)
-
+            mask = self.maskToolsWidget.getSelectionMask()
             idx_arr = np.where(mask > 0)
 
             for idx, row in enumerate(idx_arr[0]):
@@ -253,6 +253,9 @@ class Main(qt.QMainWindow):
 
             plot = self.widgetImageStack.getPlotWidget()
             _submit(plot.setGraphTitle, f"Apex Energies, Mean : {self.peak_energy_mean:.2f} eV, Std : {self.peak_energy_std:.2f} eV")
+
+            # Clear mask
+            _submit(self.maskToolsWidget._handleClearMask)
             self.toLog("Calculating peak fitting... done")
 
     def calcThickness(self):

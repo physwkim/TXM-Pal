@@ -6,16 +6,154 @@ import numpy as np
 
 from silx.gui import qt
 from silx.gui import icons
-from silx.gui.plot.PlotWindow import Plot2D as _Plot2D
 
+import silx
+from silx.gui.plot import PlotWindow
 from silx.gui.plot.items.roi import RectangleROI
+from silx.gui.plot import items
 from silx.gui.plot.tools.roi import RegionOfInterestManager
+from silx.gui.plot.Profile import ProfileToolBar
+from silx.utils.weakref import WeakMethodProxy
 
 from saveAction import SaveAction
 
 logger = logging.getLogger(__name__)
 
-class Plot2D(_Plot2D):
+class PlotWindowCustom(PlotWindow):
+    """PlotWindow with a toolbar specific for images.
+
+    This widgets provides the plot API of :~:`.PlotWidget`.
+
+    :param parent: The parent of this widget
+    :param backend: The backend to use for the plot (default: matplotlib).
+                    See :class:`.PlotWidget` for the list of supported backend.
+    :type backend: str or :class:`BackendBase.BackendBase`
+    """
+
+    def __init__(self, parent=None, backend=None):
+        # List of information to display at the bottom of the plot
+        posInfo = [
+            ('X', lambda x, y: x),
+            ('Y', lambda x, y: y),
+            ('Data', WeakMethodProxy(self._getImageValue)),
+            ('Dims', WeakMethodProxy(self._getImageDims)),
+        ]
+
+        super(PlotWindowCustom, self).__init__(parent=parent, backend=backend,
+                                     resetzoom=True, autoScale=False,
+                                     logScale=False, grid=False,
+                                     curveStyle=False, colormap=True,
+                                     aspectRatio=True, yInverted=True,
+                                     copy=True, save=True, print_=True,
+                                     control=False, position=posInfo,
+                                     roi=False, mask=False)
+        if parent is None:
+            self.setWindowTitle('Plot2D')
+        self.getXAxis().setLabel('Columns')
+        self.getYAxis().setLabel('Rows')
+
+        if silx.config.DEFAULT_PLOT_IMAGE_Y_AXIS_ORIENTATION == 'downward':
+            self.getYAxis().setInverted(True)
+
+        self.profile = ProfileToolBar(plot=self)
+        self.addToolBar(self.profile)
+
+        self.colorbarAction.setVisible(True)
+        self.getColorBarWidget().setVisible(True)
+
+        # Put colorbar action after colormap action
+        actions = self.toolBar().actions()
+        for action in actions:
+            if action is self.getColormapAction():
+                break
+
+        self.sigActiveImageChanged.connect(self.__activeImageChanged)
+
+    def __activeImageChanged(self, previous, legend):
+        """Handle change of active image
+
+        :param Union[str,None] previous: Legend of previous active image
+        :param Union[str,None] legend: Legend of current active image
+        """
+        if previous is not None:
+            item = self.getImage(previous)
+            if item is not None:
+                item.sigItemChanged.disconnect(self.__imageChanged)
+
+        if legend is not None:
+            item = self.getImage(legend)
+            item.sigItemChanged.connect(self.__imageChanged)
+
+        positionInfo = self.getPositionInfoWidget()
+        if positionInfo is not None:
+            positionInfo.updateInfo()
+
+    def __imageChanged(self, event):
+        """Handle update of active image item
+
+        :param event: Type of changed event
+        """
+        if event == items.ItemChangedType.DATA:
+            positionInfo = self.getPositionInfoWidget()
+            if positionInfo is not None:
+                positionInfo.updateInfo()
+
+    def _getImageValue(self, x, y):
+        """Get status bar value of top most image at position (x, y)
+
+        :param float x: X position in plot coordinates
+        :param float y: Y position in plot coordinates
+        :return: The value at that point or '-'
+        """
+        pickedMask = None
+        for picked in self.pickItems(
+                *self.dataToPixel(x, y, check=False),
+                lambda item: isinstance(item, items.ImageBase)):
+            if isinstance(picked.getItem(), items.MaskImageData):
+                if pickedMask is None:  # Use top-most if many masks
+                    pickedMask = picked
+            else:
+                image = picked.getItem()
+
+                indices = picked.getIndices(copy=False)
+                if indices is not None:
+                    row, col = indices[0][0], indices[1][0]
+                    value = image.getData(copy=False)[row, col]
+
+                    if pickedMask is not None:  # Check if masked
+                        maskItem = pickedMask.getItem()
+                        indices = pickedMask.getIndices()
+                        row, col = indices[0][0], indices[1][0]
+                        if maskItem.getData(copy=False)[row, col] != 0:
+                            return value, "Masked"
+                    return value
+
+        return '-'  # No image picked
+
+    def _getImageDims(self, *args):
+        activeImage = self.getActiveImage()
+        if (activeImage is not None and
+                    activeImage.getData(copy=False) is not None):
+            dims = activeImage.getData(copy=False).shape[1::-1]
+            return 'x'.join(str(dim) for dim in dims)
+        else:
+            return '-'
+
+    def getProfileToolbar(self):
+        """Profile tools attached to this plot
+
+        See :class:`silx.gui.plot.Profile.ProfileToolBar`
+        """
+        return self.profile
+
+    def getProfilePlot(self):
+        """Return plot window used to display profile curve.
+
+        :return: :class:`Plot1D`
+        """
+        return self.profile.getProfilePlot()
+
+class Plot2D(PlotWindowCustom):
     """Customized silx.gui.plot.PlotWindow.Plot2D window for roi selection
 
     :param parent: The parent of this widget
@@ -24,7 +162,7 @@ class Plot2D(_Plot2D):
     """
     sigRoiUpdated = qt.Signal(object, object)
 
-    def __init__(self, parent=None, backend='matplotlib'):
+    def __init__(self, parent=None, backend='gl'):
         super().__init__(parent=parent, backend=backend)
 
         # ROI manager
