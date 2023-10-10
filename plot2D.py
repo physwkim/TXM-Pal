@@ -45,7 +45,7 @@ class PlotWindowCustom(PlotWindow):
                                      curveStyle=False, colormap=True,
                                      aspectRatio=True, yInverted=True,
                                      copy=True, save=True, print_=True,
-                                     control=False, position=posInfo,
+                                     control=True, position=posInfo,
                                      roi=False, mask=False)
         if parent is None:
             self.setWindowTitle('Plot2D')

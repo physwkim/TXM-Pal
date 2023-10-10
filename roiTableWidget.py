@@ -5,11 +5,26 @@ from silx.gui.plot.tools.roi import RegionOfInterestManager
 from silx.gui.plot.tools.roi import RegionOfInterestTableWidget
 from silx.gui.plot.items import SymbolMixIn
 
-roiClasses = ('PointROI', 'RectangleROI', 'CircleROI', 'EllipseROI', 'PolygonROI')
+roiClasses = ('PointROI', 'RectangleROI', 'CircleROI')
 
 def updateAddedRegionOfInterest(roi):
+    rois = roi.parent().getRois()
+    roiIndexes = []
+    for roi in rois:
+        name = roi.getName()
+        if name.startswith('ROI'):
+            roiIndexes.append(int(name[4:]))
+
+    index = 1
+    for i in range(1, len(rois)+1):
+        if i not in roiIndexes:
+            index = i
+            break
+
+    print(f"roiIndexes: {roiIndexes}, index : {index}")
+
     if roi.getName() == '':
-        roi.setName(f'ROI {len(roi.parent().getRois())}')
+        roi.setName(f'ROI {index}')
     if isinstance(roi, SymbolMixIn):
         roi.setSymbolSize(4)
     roi.setSelectable(True)
@@ -24,9 +39,6 @@ class RoiTableWidget(qt.QWidget):
         # self.roiManager.sigRoiAdded.connect(self._roiAdded)
         # self.roiManager.sigRoiRemoved.connect(self._roiRemoved)
         # self.roiManager.sigRoiChanged.connect(self._roiChanged)
-        # self.roiManager.sigRoiReplaced.connect(self._roiReplaced)
-        # self.roiManager.sigRoiSelectionChanged.connect(self._roiSelectionChanged)
-        # self.roiManager.sigRoiSelectionChanged.connect(self._roiSelection
 
         self.roiTable = RegionOfInterestTableWidget()
         self.roiTable.setRegionOfInterestManager(self.roiManager)

@@ -15,6 +15,7 @@ from skimage.registration import phase_cross_correlation
 from matplotlib.colors import hsv_to_rgb
 
 from silx.gui import qt
+from silx.gui.plot.items import roi as roi_items
 from silx.gui.utils.concurrent import submitToQtMainThread as _submit
 import fabio
 
@@ -57,13 +58,20 @@ class Main(qt.QMainWindow):
         self.widgetImageStack.getPlotWidget().setDataBackgroundColor([0,0,0])
 
         # Shift Plot
-        self.widgetPlotShift.setGraphTitle("Shift")
+        # self.widgetPlotShift.setGraphTitle("Shift")
         self.widgetPlotShift.setGraphXLabel("Energy (eV)")
         self.widgetPlotShift.setGraphYLabel("Shift (pixel)")
+        self.widgetPlotShift.setBackgroundColor('#FCF9F6')
+        self.widgetPlotShift.setDataMargins(0.01, 0.01, 0.01, 0.01)
+        self.widgetPlotShift.setAxesMargins(0.06, 0.05, 0.05, 0.05)
 
         # Spectrum Plot
         self.widgetPlotSpectrum.setGraphXLabel("Energy (eV)")
         self.widgetPlotSpectrum.setGraphYLabel("Intensity (a.u.)")
+        self.widgetPlotSpectrum.getLegendsDockWidget().show()
+        self.widgetPlotSpectrum.setBackgroundColor('#FCF9F6')
+        self.widgetPlotSpectrum.setDataMargins(0.01, 0.01, 0.01, 0.01)
+        self.widgetPlotSpectrum.setAxesMargins(0.06, 0.05, 0.05, 0.05)
 
         self.pushButtonSelectPath.clicked.connect(self.select_load_path)
         self.pushButtonSelectSavePath.clicked.connect(self.select_save_path)
@@ -86,6 +94,10 @@ class Main(qt.QMainWindow):
         self.roiTableWidget = RoiTableWidget(plot=self.widgetImageStack.getPlotWidget())
         layout = self.widgetRoiTableHolder.parent().layout()
         layout.replaceWidget(self.widgetRoiTableHolder, self.roiTableWidget)
+        self.roiManager = self.roiTableWidget.roiManager
+
+        self.roiManager.sigRoiAboutToBeRemoved.connect(self.removeRoiSpectrum)
+        self.roiManager.sigRoiChanged.connect(self.updateRoiSpectrum)
 
         # ROI for cropping
         imgWidget = self.widgetImageStack.getPlotWidget()
@@ -104,6 +116,89 @@ class Main(qt.QMainWindow):
         self.pushButtonConcentration.clicked.connect(self.calcConcentration)
 
         self.pushButtonSaving.clicked.connect(self.saveData)
+
+
+    def getSpectrum(self, roi):
+        """Get spectrum from ROI"""
+        if isinstance(roi, roi_items.PointROI):
+            position = roi.getPosition()
+            spectrum = self.absorbanceImage[:, floor(position[1]), floor(position[0])]
+        elif isinstance(roi, roi_items.CircleROI):
+            center = roi.getCenter()
+            radius = roi.getRadius()
+            ref_image = self.absorbanceImage[0]
+
+            mask = np.zeros_like(ref_image, dtype=bool)
+            xStart = floor(center[0] - radius)
+            xStop = ceil(center[0] + radius)
+            yStart = floor(center[1] - radius)
+            yStop = ceil(center[1] + radius)
+
+            for yIdx in range(yStart, yStop):
+                for xIdx in range(xStart, xStop):
+                    if (xIdx - center[0])**2 + (yIdx - center[1])**2 < radius**2:
+                        mask[yIdx, xIdx] = True
+            mask = np.invert(mask)
+            maskArray = np.array([mask for _ in range(len(self.energy_list))])
+            maskedData = np.ma.masked_array(self.absorbanceImage, mask=maskArray)
+            spectrum = np.sum(maskedData, axis=(1, 2))
+
+        elif isinstance(roi, roi_items.RectangleROI):
+            origin = roi.getOrigin()
+            size = roi.getSize()
+            xStart = floor(origin[0])
+            xStop = floor(origin[0] + size[0])
+            yStart = floor(origin[1])
+            yStop = floor(origin[1] + size[1])
+
+            data = self.absorbanceImage[:, yStart:yStop, xStart:xStop]
+            spectrum = np.sum(data, axis=(1, 2))
+        else:
+            return
+
+        return spectrum
+
+    def removeRoiSpectrum(self, roi):
+        roi_name = roi.getName()
+        _submit(self.widgetPlotSpectrum.removeCurve, roi_name)
+        self.toLog(f"ROI removed : {roi_name}")
+
+    def updateRoiSpectrum(self):
+        self.toLog("Updating ROI spectrum...")
+        rois = self.roiManager.getRois()
+        print(f"rois : {[roi.getName() for roi in rois]}")
+        for roi in rois:
+            roi_name = roi.getName()
+
+            spectrum = self.getSpectrum(roi)
+            curve = self.widgetPlotSpectrum.getCurve(roi_name)
+
+            if curve:
+                oldSpectrum = curve.getYData()
+                if np.any(oldSpectrum != spectrum):
+                    _submit(self.widgetPlotSpectrum.addCurve,
+                            self.energy_list,
+                            spectrum,
+                            legend=roi_name)
+
+            else:
+                rois = self.roiManager.getRois()
+                all_rois = [roi.getName() for roi in rois]
+
+                if roi_name in all_rois:
+                    _submit(self.widgetPlotSpectrum.addCurve,
+                            self.energy_list,
+                            spectrum,
+                            legend=roi_name)
+
+        # cleanup curves
+        curves = self.widgetPlotSpectrum.getAllCurves()
+        rois = self.roiManager.getRois()
+        all_rois = [roi.getName() for roi in rois]
+        for curve in curves:
+            if curve.getLegend() not in all_rois:
+                _submit(self.widgetPlotSpectrum.removeCurve, curve.getLegend())
+        self.toLog("Updating ROI spectrum... done")
 
     def toggleROI(self, state):
         if state == qt.Qt.Checked:
