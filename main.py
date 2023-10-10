@@ -73,6 +73,12 @@ class Main(qt.QMainWindow):
         self.widgetPlotSpectrum.setDataMargins(0.01, 0.01, 0.01, 0.01)
         self.widgetPlotSpectrum.setAxesMargins(0.06, 0.05, 0.05, 0.05)
 
+        # Histogram Plot
+        self.widgetPlotHistogram.setGraphXLabel("Energy (eV)")
+        self.widgetPlotHistogram.setGraphYLabel("Counts")
+
+        self.pushButtonHistogram.clicked.connect(self.plotHistogram)
+
         self.pushButtonSelectPath.clicked.connect(self.select_load_path)
         self.pushButtonSelectSavePath.clicked.connect(self.select_save_path)
 
@@ -117,6 +123,17 @@ class Main(qt.QMainWindow):
 
         self.pushButtonSaving.clicked.connect(self.saveData)
 
+    def plotHistogram(self):
+        refEnergy = self.doubleSpinBoxRefEnergy.value()
+        energyRange = self.doubleSpinBoxEnergyRange.value()
+        energyStep = self.doubleSpinBoxEnergyStep.value()
+        energyStart = refEnergy - energyRange
+        energyStop = refEnergy + energyRange
+        numBins = int(energyRange*2/energyStep)
+
+        data = self.peak_image.copy()
+        hist = np.histogram(data, bins=numBins, range=(energyStart, energyStop))
+        _submit(self.widgetPlotHistogram.addHistogram, hist[0], hist[1])
 
     def getSpectrum(self, roi):
         """Get spectrum from ROI"""
@@ -166,7 +183,7 @@ class Main(qt.QMainWindow):
     def updateRoiSpectrum(self):
         self.toLog("Updating ROI spectrum...")
         rois = self.roiManager.getRois()
-        print(f"rois : {[roi.getName() for roi in rois]}")
+        # print(f"rois : {[roi.getName() for roi in rois]}")
         for roi in rois:
             roi_name = roi.getName()
 
