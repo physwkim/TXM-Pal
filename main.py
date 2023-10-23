@@ -12,6 +12,10 @@ from scipy.ndimage import median_filter
 from scipy.ndimage import shift
 from scipy.ndimage import affine_transform
 from skimage.registration import phase_cross_correlation
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 from matplotlib.colors import hsv_to_rgb
 
 from silx.gui import qt
@@ -23,6 +27,8 @@ import h5py
 
 from utils import fitPeak
 from utils import magnification_corr_factors
+
+from lmfitrs import quadfit, gaussianfit
 
 from roiTableWidget import RoiTableWidget
 
@@ -77,7 +83,7 @@ class Main(qt.QMainWindow):
         self.widgetPlotHistogram.setGraphXLabel("Energy (eV)")
         self.widgetPlotHistogram.setGraphYLabel("Counts")
 
-        self.pushButtonHistogram.clicked.connect(self.plotHistogram)
+        self.pushButtonHistogram.setCallable(self.plotHistogram)
 
         self.pushButtonSelectPath.clicked.connect(self.select_load_path)
         self.pushButtonSelectSavePath.clicked.connect(self.select_save_path)
@@ -93,7 +99,7 @@ class Main(qt.QMainWindow):
         self.widgetImageStack.sigEnergyKeV.connect(self.updateEnergy)
 
         self.pushButtonFiltering.setCallable(self.applyFiltering)
-        self.pushButtonMagCorr.clicked.connect(self.magnificationCorrection)
+        self.pushButtonMagCorr.setCallable(self.magnificationCorrection)
         self.pushButtonAlign.setCallable(self.alignImages)
 
         # ROI Table
@@ -116,10 +122,10 @@ class Main(qt.QMainWindow):
 
         self.pushButtonCrop.setCallable(self.cropImage)
 
-        self.pushButtonThickness.clicked.connect(self.calcThickness)
+        self.pushButtonThickness.setCallable(self.calcThickness)
         # self.pushButtonSelectMask.clicked.connect(self.select_mask)
-        self.pushButtonFitting.clicked.connect(self.calcPeakFitting)
-        self.pushButtonConcentration.clicked.connect(self.calcConcentration)
+        self.pushButtonFitting.setCallable(self.calcPeakFitting)
+        self.pushButtonConcentration.setCallable(self.calcConcentration)
 
         self.pushButtonSaving.clicked.connect(self.saveData)
 
@@ -133,6 +139,7 @@ class Main(qt.QMainWindow):
 
         data = self.peak_image.copy()
         hist = np.histogram(data, bins=numBins, range=(energyStart, energyStop))
+        self.histogram = hist
         _submit(self.widgetPlotHistogram.addHistogram, hist[0], hist[1])
 
     def getSpectrum(self, roi):
@@ -265,6 +272,7 @@ class Main(qt.QMainWindow):
 
         with h5py.File(save_file, "w") as f:
             entry_1 = f.create_group("entry_1")
+            entry_1.create_dataset("energies", data=self.energy_list)
             entry_1.create_dataset("absorbance", data=self.absorbanceImage)
             entry_1.create_dataset("projection", data=self.projImage)
             entry_1.create_dataset("thickness", data=self.thickness_image)
@@ -272,6 +280,13 @@ class Main(qt.QMainWindow):
             entry_1.create_dataset("peak", data=self.peak_image)
             entry_1.create_dataset("peak_energy_mean", data=self.peak_energy_mean)
             entry_1.create_dataset("peak_energy_std", data=self.peak_energy_std)
+            entry_1.create_dataset("histogram_bins", data=self.histogram[1])
+            entry_1.create_dataset("histogram_count", data=self.histogram[0])
+
+        tiff_file = os.path.join(save_path, f"{self.basename}_result_{num:d}.tif")
+        plt.figure(figsize=(10, 10))
+        plt.imshow(self.concentration_image, origin='lower')
+        plt.savefig(tiff_file)
 
         self.toLog(f"Result saved to {save_file}")
 
@@ -320,9 +335,32 @@ class Main(qt.QMainWindow):
     def calcPeakFitting(self):
         if self.thickness_image is not None:
             self.toLog("Calculating peak fitting...")
-            self.peak_image = np.zeros_like(self.thickness_image)
-            self.peak_image.fill(np.nan)
+            # self.peak_image = np.zeros_like(self.thickness_image)
+            # self.peak_image.fill(np.nan)
             cutOff = self.spinBoxCutOff.value()
+            mask = self.maskToolsWidget.getSelectionMask()
+            if not np.any(mask):
+                # fit all data if mask is empty
+                mask = np.ones_like(self.thickness_image, dtype=np.uint8)
+
+            fitModel = self.comboBoxFitModel.currentText()
+            fitPoints = self.spinBoxFitPoints.value()
+
+            nrj = np.array(self.energy_list, dtype=np.float64)
+            stack = np.array(self.absorbanceImage, dtype=np.float64)
+
+            if fitModel == "Polynomial":
+                self.peak_image = quadfit(nrj,
+                                          stack,
+                                          fitPoints,
+                                          mask)
+            elif fitModel == "Gaussian":
+                self.peak_image = gaussianfit(nrj,
+                                              stack,
+                                              fitPoints,
+                                              mask)
+
+            """
             fitModel = self.comboBoxFitModel.currentText()
             fitPoints = self.spinBoxFitPoints.value()
             algorithm = self.comboBoxFitModel.currentText()
@@ -350,6 +388,7 @@ class Main(qt.QMainWindow):
                 # print(f"peak_image : {self.peak_image}, cen : {cen}")
 
                 self.peak_image[row, col] = cen
+            """
 
             # Reject outliers
             peak_average = np.nanmean(self.peak_image)
@@ -396,7 +435,7 @@ class Main(qt.QMainWindow):
         self.toLog("Image cropped")
 
         # Hide, Reload, and Reset zoom
-        _submit(self.widgetImageStack.getPlotWidget().toggleROI, False)
+        _submit(self.checkBoxROI.setChecked, False)
         self.reloadDisplay()
         _submit(self.widgetImageStack.resetZoom)
 
