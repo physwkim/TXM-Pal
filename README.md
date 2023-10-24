@@ -8,7 +8,6 @@
     - conda install git
 4) Download palxanes repo
     - git clone https://github.com/physwkim/palxanes.git 
-    - git submodule update --init --recursive
 5) Create python environment
     - conda env create -f ./env.yaml
 6) Install rust library
@@ -19,7 +18,9 @@
 ### Build library [Optional]
 1) Install rustup
     https://rustup.rs/#
-2) cd palxanes/lib
-3) conda activate palxanes
-4) Install library
+2) Download submodule
+    - git submodule update --init --recursive
+3) cd palxanes/lib
+4) conda activate palxanes
+5) Install library
     maturin develop -r
