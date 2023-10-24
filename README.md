@@ -11,7 +11,9 @@
 5) Create python environment
     - conda env create -f ./env.yaml
 6) Install rust library
+    - cd wheels
     - pip install lmfitrs-0.1.0-cp38-none-win_amd64.whl
+    - cd ..
 11) Run main.py
     - python main.py
 
