@@ -34,6 +34,14 @@ from roiTableWidget import RoiTableWidget
 
 BASE_PATH = os.path.expanduser('~')
 
+from PyQt5 import QtWidgets, QtCore, QtGui
+
+if os.name == 'nt':
+    # Enable highdpi scaling
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+    # Use highdpi icons
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+
 class Main(qt.QMainWindow):
     """Main Window"""
 
