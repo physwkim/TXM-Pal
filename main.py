@@ -333,7 +333,8 @@ class Main(qt.QMainWindow):
 
         plot = self.widgetImageStack.getPlotWidget()
         _submit(plot.addImage, self.concentration_image)
-        _submit(plot.setGraphTitle, f"Concentraion")
+        title = f"{self.basename}, mean : {self.peak_energy_mean:.3f}, std : {self.peak_energy_std:.3f}, startE : {startE:.2f}, stopE : {stopE:.2f}"
+        _submit(plot.setGraphTitle, title)
         self.toLog("Calculating concentration... done")
 
     def calcPeakFitting(self):
