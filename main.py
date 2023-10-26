@@ -28,7 +28,7 @@ import h5py
 from utils import fitPeak
 from utils import magnification_corr_factors
 
-from lmfitrs import quadfit, gaussianfit, quadfit_mc, gaussianfit_mc
+from lmfitrs import quadfit_mc, gaussianfit_mc
 
 from roiTableWidget import RoiTableWidget
 
@@ -370,26 +370,6 @@ class Main(qt.QMainWindow):
             polyorder = self.spinBoxPolyorder.value()
 
             if fitModel == "Polynomial":
-                self.peak_image = quadfit(nrj,
-                                          stack,
-                                          fitPoints,
-                                          mask,
-                                          startE,
-                                          stopE,
-                                          smooth,
-                                          window_length,
-                                          polyorder)
-            elif fitModel == "Gaussian":
-                self.peak_image = gaussianfit(nrj,
-                                              stack,
-                                              fitPoints,
-                                              mask,
-                                              startE,
-                                              stopE,
-                                              smooth,
-                                              window_length,
-                                              polyorder)
-            elif fitModel == "Polynomial (MC)":
                 self.peak_image = quadfit_mc(nrj,
                                           stack,
                                           fitPoints,
@@ -399,16 +379,17 @@ class Main(qt.QMainWindow):
                                           smooth,
                                           window_length,
                                           polyorder)
-            elif fitModel == "Gaussian (MC)":
+            elif fitModel == "Gaussian":
                 self.peak_image = gaussianfit_mc(nrj,
-                                          stack,
-                                          fitPoints,
-                                          mask,
-                                          startE,
-                                          stopE,
-                                          smooth,
-                                          window_length,
-                                          polyorder)
+                                              stack,
+                                              fitPoints,
+                                              mask,
+                                              startE,
+                                              stopE,
+                                              smooth,
+                                              window_length,
+                                              polyorder)
+
 
             """
             fitModel = self.comboBoxFitModel.currentText()
