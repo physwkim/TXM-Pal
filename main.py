@@ -304,10 +304,9 @@ class Main(qt.QMainWindow):
         stopE = self.doubleSpinBoxStopE.value()
         conc = (self.peak_image - startE) / (stopE - startE)
         thickness_img = self.thickness_image.copy()
-        thickness_img[conc < 0] = 0
-        thickness_img[conc > 1.05] = 0
+
         negative_mask = np.logical_and(conc<0 , np.logical_not(np.isnan(conc)))
-        ceil_mask = np.logical_and(conc>1.05, np.logical_not(np.isnan(conc)))
+        ceil_mask = np.logical_and(conc>1.0, np.logical_not(np.isnan(conc)))
 
         conc[negative_mask] = 0
         conc[ceil_mask] = 1
@@ -319,9 +318,6 @@ class Main(qt.QMainWindow):
         hsv[:, :, 0] = conc * (1/3)
         hsv[:, :, 1] = np.ones_like(conc)
         hsv[:, :, 2] = thickness_img / np.nanmax(thickness_img)
-
-        # Replace Nan With 0
-        # hsv = np.nan_to_num(hsv, nan=0.0)
 
         # Convert HSV to RGB
         rgb = hsv_to_rgb(hsv)
