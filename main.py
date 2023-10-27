@@ -291,9 +291,13 @@ class Main(qt.QMainWindow):
             entry_1.create_dataset("histogram_bins", data=self.histogram[1])
             entry_1.create_dataset("histogram_count", data=self.histogram[0])
 
+        startE = self.doubleSpinBoxStartE.value()
+        stopE = self.doubleSpinBoxStopE.value()
+        title = f"{self.basename}, mean : {self.peak_energy_mean:.3f}, std : {self.peak_energy_std:.3f}, startE : {startE:.2f}, stopE : {stopE:.2f}"
         tiff_file = os.path.join(save_path, f"{self.basename}_result_{num:d}.tif")
         plt.figure(figsize=(10, 10))
         plt.imshow(self.concentration_image, origin='lower')
+        plt.title(title)
         plt.savefig(tiff_file)
 
         self.toLog(f"Result saved to {save_file}")
