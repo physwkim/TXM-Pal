@@ -165,6 +165,8 @@ class Plot2D(PlotWindowCustom):
     def __init__(self, parent=None, backend='gl'):
         super().__init__(parent=parent, backend=backend)
 
+        self.fitImage = None
+
         # ROI manager
         self._roiManager = RegionOfInterestManager(self)
 
@@ -229,6 +231,42 @@ class Plot2D(PlotWindowCustom):
         size = np.array(self._roi.getSize()).astype(int)
         # print("origin : {}, size : {}".format(origin, size))
         self.sigRoiUpdated.emit(origin, size)
+
+    def _getImageValue(self, x, y):
+        """Get status bar value of top most image at position (x, y)
+
+        :param float x: X position in plot coordinates
+        :param float y: Y position in plot coordinates
+        :return: The value at that point or '-'
+        """
+        pickedMask = None
+        for picked in self.pickItems(
+                *self.dataToPixel(x, y, check=False),
+                lambda item: isinstance(item, items.ImageBase)):
+            if isinstance(picked.getItem(), items.MaskImageData):
+                if pickedMask is None:  # Use top-most if many masks
+                    pickedMask = picked
+            else:
+                image = picked.getItem()
+
+                indices = picked.getIndices(copy=False)
+                if indices is not None:
+                    row, col = indices[0][0], indices[1][0]
+                    value = image.getData(copy=False)[row, col]
+
+                    if isinstance(value, np.ndarray):
+                        if self.fitImage is not None:
+                            value = self.fitImage[row, col]
+
+                    if pickedMask is not None:  # Check if masked
+                        maskItem = pickedMask.getItem()
+                        indices = pickedMask.getIndices()
+                        row, col = indices[0][0], indices[1][0]
+                        if maskItem.getData(copy=False)[row, col] != 0:
+                            return value, "Masked"
+                    return value
+
+        return '-'  # No image picked
 
 if __name__ == '__main__':
     app = qt.QApplication([])

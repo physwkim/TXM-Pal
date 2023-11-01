@@ -137,6 +137,23 @@ class Main(qt.QMainWindow):
 
         self.pushButtonSaving.clicked.connect(self.saveData)
 
+        # Fitting algorithm selection
+        self.comboBoxSmoothAlgorithm.currentTextChanged.connect(self.updateSmoothAlgorithm)
+
+    def updateSmoothAlgorithm(self, algorithm):
+        if algorithm == "3point":
+            _submit(self.spinBoxWindowLength.setEnabled, False)
+            _submit(self.spinBoxPolyorder.setEnabled, True)
+            _submit(self.labelParam1.setText, "Iteration")
+        elif algorithm == "median":
+            _submit(self.spinBoxWindowLength.setEnabled, True)
+            _submit(self.spinBoxPolyorder.setEnabled, False)
+            _submit(self.labelParam1.setText, "Window Length")
+        else:
+            _submit(self.labelParam1.setText, "Window Length")
+            _submit(self.spinBoxWindowLength.setEnabled, True)
+            _submit(self.spinBoxPolyorder.setEnabled, True)
+
     def plotHistogram(self):
         refEnergy = self.doubleSpinBoxRefEnergy.value()
         energyRange = self.doubleSpinBoxEnergyRange.value()
@@ -155,6 +172,7 @@ class Main(qt.QMainWindow):
         if isinstance(roi, roi_items.PointROI):
             position = roi.getPosition()
             spectrum = self.absorbanceImage[:, floor(position[1]), floor(position[0])]
+            # print(f"position : {position}, spectrum : {spectrum}")
         elif isinstance(roi, roi_items.CircleROI):
             center = roi.getCenter()
             radius = roi.getRadius()
@@ -366,7 +384,7 @@ class Main(qt.QMainWindow):
                 stopE = self.energy_list[-1]
 
             smooth = self.groupBoxSmooth.isChecked()
-            algorithm = self.comboBoxFitModel.currentText()
+            algorithm = self.comboBoxSmoothAlgorithm.currentText()
             window_length = self.spinBoxWindowLength.value()
             polyorder = self.spinBoxPolyorder.value()
 
@@ -378,6 +396,7 @@ class Main(qt.QMainWindow):
                                           startE,
                                           stopE,
                                           smooth,
+                                          algorithm,
                                           window_length,
                                           polyorder)
             elif fitModel == "Gaussian":
@@ -388,6 +407,7 @@ class Main(qt.QMainWindow):
                                               startE,
                                               stopE,
                                               smooth,
+                                              algorithm,
                                               window_length,
                                               polyorder)
 
@@ -432,6 +452,7 @@ class Main(qt.QMainWindow):
             self.peak_energy_mean = np.nanmean(peak_image)
             self.peak_energy_std = np.nanstd(peak_image)
 
+            self.widgetImageStack.setFitImage(self.peak_image)
             _submit(self.widgetImageStack.setStack, self.peak_image)
 
             plot = self.widgetImageStack.getPlotWidget()
@@ -677,6 +698,11 @@ class Main(qt.QMainWindow):
                 _submit(self.widgetImageStack.setCurrentIndex, self.middle_index)
                 self.widgetImageStack._energy_list = self.energy_list
 
+                # store filename and path
+                base_path = str(Path(base_path).parent)
+                self.widgetPlotSpectrum.setPath(base_path)
+                self.widgetPlotSpectrum.setFilename(self.basename)
+
                 self.toLog(f"loading done")
 
     def select_load_path(self):
@@ -723,7 +749,8 @@ class Main(qt.QMainWindow):
         elif os.path.exists(self.selected_save_path):
             # Display current path
             _submit(self.lineEditSavePath.setText, str(self.selected_save_path))
-            save_path = str(Path(self.selected_save_path).parent)
+            save_path = str(self.selected_save_path)
+            self.widgetPlotSpectrum.setPath(save_path)
             qsettings.setValue('selected_save_path', save_path)
 
     def select_mask(self):

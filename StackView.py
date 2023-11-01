@@ -58,6 +58,15 @@ class StackView(qt.QWidget):
         # self.setCentralWidget(central_widget)
         self.setLayout(layout)
 
+    def setFitImage(self, fit_image):
+        self._plot.fitImage = fit_image
+
+    def setPath(self, path):
+        self._plot.setPath(path)
+
+    def setFilename(self, filename):
+        self._plot.setFilename(filename)
+
     def resetZoom(self):
         """Reset the plot limits to the bounds of the data and redraw the plot.
 

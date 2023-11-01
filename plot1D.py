@@ -1,3 +1,7 @@
+import os
+import re
+import numpy as np
+
 from silx.gui import qt
 from silx.gui import icons
 from silx.gui.plot.PlotWindow import PlotWindow
@@ -25,16 +29,83 @@ class Plot1DCustom(PlotWindow):
                                            logScale=True, grid=True,
                                            curveStyle=True, colormap=False,
                                            aspectRatio=False, yInverted=False,
-                                           copy=True, save=True, print_=True,
+                                           copy=True, save=False, print_=True,
                                            control=True, position=True,
                                            roi=False, mask=False, fit=False)
 
         # Retrieve PlotWidget's plot area widget
         plotArea = self.getWidgetHandle()
 
+        # Data margins
+        self.setDataMargins(0.01, 0.01, 0.01, 0.01)
+
+        self._path = ''
+        self._filename = ''
+
         self.setDefaultPlotPoints(False)
         self.getGridAction().setChecked(False)
         self.setGraphGrid(False)
+
+        self._saveAction = qt.QAction(icons.getQIcon('document-save'), 'Save', self)
+        self._saveAction.setCheckable(False)
+        self._saveAction.triggered.connect(self.savePlots)
+        self._outputToolBar.addAction(self._saveAction)
+
+    @property
+    def path(self):
+        return self._path
+
+    @property
+    def filename(self):
+        return self._filename
+
+    def setPath(self, path):
+        self._path = path
+
+    def setFilename(self, filename):
+        self._filename = filename
+
+    def savePlots(self):
+        """Save plots to file."""
+        curve_names = []
+        data = []
+        header = ''
+
+        curves = self.getAllCurves()
+        if len(curves) > 0:
+            for idx, curve in enumerate(curves):
+                curve_names.append(curve.getName())
+
+            curve_names = sorted(curve_names)
+            header = 'Energy\t' + '\t'.join(curve_names)
+
+            re_pat = re.compile(r"[0-9]+")
+
+            print(f"path : {self.path}, filename : {self.filename}")
+            last_num = -1
+            with os.scandir(self.path) as it:
+                for item in it:
+                    if item.is_file() and item.name.find(self.filename) >= -1:
+                        idx = item.name[:-4].split('_spectrum_')[-1]
+                        if re_pat.match(idx):
+
+                            try:
+                                if int(idx) > last_num:
+                                    last_num = int(idx)
+                            except:
+                                ...
+                num = last_num + 1
+
+            save_file = os.path.join(self.path, f"{self.filename}_spectrum_{num:d}.dat")
+
+            for idx, curve_name in enumerate(curve_names):
+                if idx == 0:
+                    data.append(self.getCurve(curve_name).getXData())
+                data.append(self.getCurve(curve_name).getYData())
+            data = np.array(data).transpose()
+
+            # save curves
+            np.savetxt(save_file, data, header=header, fmt='%.4e', delimiter='\t')
 
     def resetZoom(self, dataMargins=None):
         """Reset the plot limits to the bounds of the data and redraw the plot.
