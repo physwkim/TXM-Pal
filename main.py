@@ -133,7 +133,7 @@ class Main(qt.QMainWindow):
 
         self.pushButtonThickness.setCallable(self.calcThickness)
         # self.pushButtonSelectMask.clicked.connect(self.select_mask)
-        self.pushButtonFitting.clicked.connect(self.calcPeakFitting)
+        self.pushButtonFitting.setCallable(self.calcPeakFitting)
         self.pushButtonConcentration.setCallable(self.calcConcentration)
 
         self.pushButtonSaving.clicked.connect(self.saveData)
@@ -317,11 +317,11 @@ class Main(qt.QMainWindow):
         startE = self.doubleSpinBoxStartE.value()
         stopE = self.doubleSpinBoxStopE.value()
         title = f"{self.basename}, mean : {self.peak_energy_mean:.3f}, std : {self.peak_energy_std:.3f}\nstartE : {startE:.2f}, stopE : {stopE:.2f}\nsize : {self.concentration_image.shape[1]} x {self.concentration_image.shape[0]}"
-        tiff_file = os.path.join(save_path, f"{self.basename}_result_{num:d}.tif")
+        img_file = os.path.join(save_path, f"{self.basename}_result_{num:d}.png")
         plt.figure(figsize=(10, 10))
         plt.imshow(self.concentration_image, origin='lower')
         plt.title(title, fontdict={'fontsize': 30})
-        plt.savefig(pngFile, format='png', bbox_inches='tight')
+        plt.savefig(img_file, format='png', bbox_inches='tight')
 
         self.toLog(f"Result saved to {save_file}")
 
