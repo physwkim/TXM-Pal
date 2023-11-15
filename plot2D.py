@@ -15,7 +15,7 @@ from silx.gui.plot.tools.roi import RegionOfInterestManager
 from silx.gui.plot.Profile import ProfileToolBar
 from silx.utils.weakref import WeakMethodProxy
 
-from saveAction import SaveAction
+from actions import SaveAction, CopyAction
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class PlotWindowCustom(PlotWindow):
                                      logScale=False, grid=False,
                                      curveStyle=False, colormap=True,
                                      aspectRatio=True, yInverted=True,
-                                     copy=True, save=True, print_=True,
+                                     copy=False, save=False, print_=False,
                                      control=True, position=posInfo,
                                      roi=False, mask=False)
         if parent is None:
@@ -191,16 +191,21 @@ class Plot2D(PlotWindowCustom):
         # Set tif as default selection on save action
         try:
             # remove oldSaveAction
-            oldSaveAction = self._outputToolBar.getSaveAction()
-            self._outputToolBar.removeAction(oldSaveAction)
+            # oldSaveAction = self._outputToolBar.getSaveAction()
+            # self._outputToolBar.removeAction(oldSaveAction)
 
             # create new saveAction
             saveAction = SaveAction(parent=self._outputToolBar, plot=self)
             self._outputToolBar._saveAction = saveAction
             self._outputToolBar.addAction(saveAction)
 
-            imageFilters = self._outputToolBar.getSaveAction()._filters['image']
-            imageFilters.move_to_end('Image data as EDF (*.edf)')
+            # imageFilters = self._outputToolBar.getSaveAction()._filters['image']
+            # imageFilters.move_to_end('Image data as EDF (*.edf)')
+
+            # New copy action
+            copyAction = CopyAction(parent=self._outputToolBar, plot=self)
+            self._outputToolBar._copyAction = copyAction
+            self._outputToolBar.addAction(copyAction)
 
         except Exception as ex:
             print("Exception occured customizing SaveAction in Plot2D : {}".format(ex))

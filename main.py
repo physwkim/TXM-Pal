@@ -25,7 +25,7 @@ import fabio
 
 import h5py
 
-from utils import fitPeak
+# from utils import fitPeak
 from utils import magnification_corr_factors
 
 from lmfitrs import quadfit_mc, gaussianfit_mc
@@ -41,6 +41,7 @@ if os.name == 'nt':
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     # Use highdpi icons
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+
 
 class Main(qt.QMainWindow):
     """Main Window"""
@@ -142,15 +143,19 @@ class Main(qt.QMainWindow):
 
     def updateSmoothAlgorithm(self, algorithm):
         if algorithm == "3point":
-            _submit(self.spinBoxWindowLength.setEnabled, False)
-            _submit(self.spinBoxPolyorder.setEnabled, True)
-            _submit(self.labelParam1.setText, "Iteration")
-        elif algorithm == "median":
             _submit(self.spinBoxWindowLength.setEnabled, True)
+            _submit(self.spinBoxWindowLength.setValue, 3)
+            _submit(self.spinBoxPolyorder.setEnabled, False)
+            _submit(self.labelParam1.setText, "Iteration")
+        elif algorithm == "boxcar":
+            _submit(self.spinBoxWindowLength.setEnabled, True)
+            _submit(self.spinBoxWindowLength.setValue, 3)
             _submit(self.spinBoxPolyorder.setEnabled, False)
             _submit(self.labelParam1.setText, "Window Length")
         else:
             _submit(self.labelParam1.setText, "Window Length")
+            _submit(self.spinBoxWindowLength.setValue, 7)
+            _submit(self.spinBoxPolyorder.setValue, 3)
             _submit(self.spinBoxWindowLength.setEnabled, True)
             _submit(self.spinBoxPolyorder.setEnabled, True)
 
@@ -311,12 +316,12 @@ class Main(qt.QMainWindow):
 
         startE = self.doubleSpinBoxStartE.value()
         stopE = self.doubleSpinBoxStopE.value()
-        title = f"{self.basename}, mean : {self.peak_energy_mean:.3f}, std : {self.peak_energy_std:.3f}, startE : {startE:.2f}, stopE : {stopE:.2f}"
+        title = f"{self.basename}, mean : {self.peak_energy_mean:.3f}, std : {self.peak_energy_std:.3f}\nstartE : {startE:.2f}, stopE : {stopE:.2f}\nsize : {self.concentration_image.shape[1]} x {self.concentration_image.shape[0]}"
         tiff_file = os.path.join(save_path, f"{self.basename}_result_{num:d}.tif")
         plt.figure(figsize=(10, 10))
         plt.imshow(self.concentration_image, origin='lower')
-        plt.title(title)
-        plt.savefig(tiff_file)
+        plt.title(title, fontdict={'fontsize': 30})
+        plt.savefig(pngFile, format='png', bbox_inches='tight')
 
         self.toLog(f"Result saved to {save_file}")
 
@@ -355,7 +360,7 @@ class Main(qt.QMainWindow):
 
         plot = self.widgetImageStack.getPlotWidget()
         _submit(plot.addImage, self.concentration_image)
-        title = f"{self.basename}, mean : {self.peak_energy_mean:.3f}, std : {self.peak_energy_std:.3f}, startE : {startE:.2f}, stopE : {stopE:.2f}"
+        title = f"{self.basename}, mean : {self.peak_energy_mean:.3f}, std : {self.peak_energy_std:.3f}\nstartE : {startE:.2f}, stopE : {stopE:.2f}, size : {self.concentration_image.shape[1]} x {self.concentration_image.shape[0]}"
         _submit(plot.setGraphTitle, title)
         self.toLog("Calculating concentration... done")
 
@@ -410,37 +415,6 @@ class Main(qt.QMainWindow):
                                               algorithm,
                                               window_length,
                                               polyorder)
-
-
-            """
-            fitModel = self.comboBoxFitModel.currentText()
-            fitPoints = self.spinBoxFitPoints.value()
-            algorithm = self.comboBoxFitModel.currentText()
-
-            mask = self.maskToolsWidget.getSelectionMask()
-            idx_arr = np.where(mask > 0)
-
-            for idx, row in enumerate(idx_arr[0]):
-                col = idx_arr[1][idx]
-                spectrum = self.absorbanceImage[:, row, col]
-                # print(f"row : {row}, col : {col}, spectrum : {spectrum}")
-                maxIdx = np.argmax(spectrum)
-                idx_start = maxIdx - fitPoints // 2
-                idx_stop = maxIdx + fitPoints // 2
-
-                # print(f"maxIdx : {maxIdx}, idx_start : {idx_start}, idx_stop : {idx_stop}")
-                xdata = self.energy_list[idx_start:idx_stop]
-                ydata = spectrum[idx_start:idx_stop]
-                # print(f"xdata : {xdata}, ydata : {ydata}")
-                if len(xdata) == 0 or len(ydata) == 0:
-                    continue
-
-                cen = fitPeak(xdata, ydata, algorithm=algorithm)
-                # cen = delayed(fitPeak)(xdata, ydata)
-                # print(f"peak_image : {self.peak_image}, cen : {cen}")
-
-                self.peak_image[row, col] = cen
-            """
 
             # Reject outliers
             peak_average = np.nanmean(self.peak_image)
@@ -671,7 +645,11 @@ class Main(qt.QMainWindow):
                     images = []
                     for f in back_image_dict[energy]:
                         image_path = os.path.join(back_path, f)
-                        images.append(tifffile.imread(image_path))
+                        # print(f"image_path : {image_path}")
+                        try:
+                            images.append(tifffile.imread(image_path))
+                        except:
+                            self.toLog(f"Error loading {image_path}")
                     backImageStack[idx] = np.mean(images, axis=0)
 
                 self.backImage = backImageStack
@@ -701,6 +679,7 @@ class Main(qt.QMainWindow):
                 # store filename and path
                 base_path = str(Path(base_path).parent)
                 self.widgetPlotSpectrum.setPath(base_path)
+                self.widgetPlotHistogram.setPath(base_path)
                 self.widgetPlotSpectrum.setFilename(self.basename)
 
                 self.toLog(f"loading done")

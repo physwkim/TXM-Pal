@@ -1,5 +1,6 @@
 import numpy as np
 from lmfit.models import GaussianModel, LinearModel, PolynomialModel
+from io import BytesIO
 
 def fitPeak(xdata, ydata, algorithm='Polynomial'):
     """Do fit and return the center of the peak."""
@@ -42,7 +43,7 @@ def calcFocalLength(energy, zpDiameter, zpOutermostWidth, numZones):
 
 def magnification_corr_factors(energies, magnification=6, zpDiameter=300e-6, zpOutermostWidth=30e-9, numZones=2500):
     """ Return the magnification correction factor for a given magnification.
-        
+
         Parameters
         ==========
         a, b : lens equation 1/a + 1/b = 1/f
