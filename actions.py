@@ -84,13 +84,11 @@ class SaveAction(_SaveAction):
                 plot, "No Data", "No image to be saved")
             return False
 
-
-
         data = image.getData(copy=False)
         plt.figure(figsize=(10, 10))
         plt.imshow(data, origin='lower')
-        title = self.plot.getGraphTitle()
-        plt.title(title, fontdict={'fontsize': 30})
+        plt.axis('off')
+        plt.gca().set_position([0, 0, 1, 1])
         plt.savefig(filename, format='png', bbox_inches='tight')
         return True
 
