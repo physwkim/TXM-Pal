@@ -63,6 +63,8 @@ class Main(qt.QMainWindow):
         self.thickness_image = None
         self.concentration_image = None
         self.selected_mask_path = ""
+        self.selected_path = ""
+        self.selected_path_h5 = ""
 
         qt.loadUi('ui/main.ui', self)
 
@@ -94,10 +96,14 @@ class Main(qt.QMainWindow):
 
         self.pushButtonHistogram.setCallable(self.plotHistogram)
 
+        # Datafile selection
         self.pushButtonSelectPath.clicked.connect(self.select_load_path)
+        self.pushButtonLoad.setCallable(self.load)
         self.pushButtonSelectSavePath.clicked.connect(self.select_save_path)
 
-        self.pushButtonLoad.setCallable(self.load)
+        # Load result file
+        self.pushButtonSelectPathH5.clicked.connect(self.select_load_path_h5)
+        self.pushButtonLoadH5.setCallable(self.load_h5)
 
         self.checkBoxAbsorbance.clicked.connect(self.reloadDisplay)
         self.checkBoxBackground.clicked.connect(self.reloadDisplay)
@@ -306,6 +312,7 @@ class Main(qt.QMainWindow):
             entry_1.create_dataset("energies", data=self.energy_list)
             entry_1.create_dataset("absorbance", data=self.absorbanceImage)
             entry_1.create_dataset("projection", data=self.projImage)
+            entry_1.create_dataset("background", data=self.backImage)
             entry_1.create_dataset("thickness", data=self.thickness_image)
             entry_1.create_dataset("concentration", data=self.concentration_image)
             entry_1.create_dataset("peak", data=self.peak_image)
@@ -554,6 +561,25 @@ class Main(qt.QMainWindow):
         text = f"[ {time_string} ] {text}"
         _submit(self.textEditLog.append, text)
 
+    def load_h5(self):
+        """Load energy, projection, background, and absorbance images from h5 file"""
+        if os.path.exists(self.selected_path_h5):
+            try:
+                with h5py.File(self.selected_path_h5, "r") as f:
+                    entry_1 = f["entry_1"]
+                    self.energy_list = entry_1["energies"][()]
+                    self.absorbanceImage = entry_1["absorbance"][()]
+                    self.projImage = entry_1["projection"][()]
+                    self.backImage = entry_1["background"][()]
+                    self.basename = os.path.basename(self.selected_path_h5)[:-3].split('_result')[0]
+                    self.widgetPlotSpectrum.setFilename(self.basename)
+                    self.widgetPlotSpectrum.setPath(str(Path(self.selected_path_h5).parent))
+                    self.widgetPlotHistogram.setPath(str(Path(self.selected_path_h5).parent))
+                    self.toLog(f"Loaded {self.selected_path_h5}")
+            except Exception as e:
+                self.toLog(f"Error : {e}")
+                return
+
     def load(self):
         self.energy_list = []
         self.image_stack = []
@@ -707,6 +733,29 @@ class Main(qt.QMainWindow):
             _submit(self.lineEditSavePath.setText, str(os.path.dirname(self.selected_path)))
             save_path = str(Path(self.selected_path).parent)
             qsettings.setValue('selected_path', save_path)
+
+    def select_load_path_h5(self):
+        """ Select result load path """
+        # Load previous path
+        qsettings = qt.QSettings('settings.ini', qt.QSettings.IniFormat)
+        previous_selection = qsettings.value('selected_path_h5', BASE_PATH)
+
+        # Get user input
+        self.selected_path_h5 = qt.QFileDialog.getOpenFileName(
+                                        self,
+                                        "Select a h5 file",
+                                        previous_selection,
+                                        "H5 files (*.h5)")[0]
+
+        # Selection canceled
+        if self.selected_path_h5 == "":
+            return
+
+        elif os.path.exists(self.selected_path_h5):
+            # Display current path
+            _submit(self.lineEditFilePathH5.setText, str(self.selected_path_h5))
+            save_path = str(Path(self.selected_path_h5).parent)
+            qsettings.setValue('selected_path_h5', save_path)
 
     def select_save_path(self):
         """ Select data save path """
