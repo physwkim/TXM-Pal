@@ -89,7 +89,7 @@ class SaveAction(_SaveAction):
         plt.imshow(data, origin='lower')
         plt.axis('off')
         plt.gca().set_position([0, 0, 1, 1])
-        plt.savefig(filename, format='png', bbox_inches='tight')
+        plt.savefig(filename, format='png', bbox_inches='tight', pad_inches=0)
         return True
 
 
