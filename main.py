@@ -92,7 +92,7 @@ class Main(qt.QMainWindow):
 
         # Histogram Plot
         self.widgetPlotHistogram.setGraphXLabel("Energy (eV)")
-        self.widgetPlotHistogram.setGraphYLabel("Counts")
+        self.widgetPlotHistogram.setGraphYLabel("Ratio")
 
         self.pushButtonHistogram.setCallable(self.plotHistogram)
 
@@ -174,7 +174,10 @@ class Main(qt.QMainWindow):
         numBins = int(energyRange*2/energyStep)
 
         data = self.peak_image.copy()
-        hist = np.histogram(data, bins=numBins, range=(energyStart, energyStop))
+        hist = np.histogram(data,
+                            bins=numBins,
+                            range=(energyStart, energyStop),
+                            density=True)
         self.histogram = hist
         _submit(self.widgetPlotHistogram.addHistogram, hist[0], hist[1])
 
