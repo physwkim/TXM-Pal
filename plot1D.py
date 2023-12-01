@@ -166,7 +166,8 @@ class Plot1DHistogram(PlotWindow):
                                                        self.path,
                                                        'dat (*.dat)')
         # save curves
-        np.savetxt(selected_file[0]+'.dat', stack, fmt='%.4e', delimiter='\t')
+        print(f"histogram save!!! : {stack}")
+        np.savetxt(selected_file[0]+'.dat', stack, fmt='%.8e', delimiter='\t')
 
     def resetZoom(self, dataMargins=None):
         """Reset the plot limits to the bounds of the data and redraw the plot.
