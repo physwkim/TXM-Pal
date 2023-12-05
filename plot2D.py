@@ -12,7 +12,8 @@ from silx.gui.plot import PlotWindow
 from silx.gui.plot.items.roi import RectangleROI
 from silx.gui.plot import items
 from silx.gui.plot.tools.roi import RegionOfInterestManager
-from silx.gui.plot.Profile import ProfileToolBar
+# from silx.gui.plot.Profile import ProfileToolBar
+from Profile import MyProfileToolBar as ProfileToolBar
 from silx.utils.weakref import WeakMethodProxy
 
 from actions import SaveAction, CopyAction
