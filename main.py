@@ -265,10 +265,32 @@ class Main(qt.QMainWindow):
         self.toLog("Updating ROI spectrum... done")
 
     def toggleROI(self, state):
+        plot = self.widgetImageStack.getPlotWidget()
         if state == qt.Qt.Checked:
-            self.widgetImageStack.getPlotWidget().toggleROI(True)
+            xLimits = plot.getGraphXLimits()
+            yLimits = plot.getGraphYLimits()
+
+            xSize = (xLimits[1] - xLimits[0]) * 0.15
+            ySize = (yLimits[1] - yLimits[0]) * 0.15
+            roiSize = (xSize+ySize) // 2
+
+            centerX = (xLimits[1] + xLimits[0]) // 2
+            centerY = (yLimits[1] + yLimits[0]) // 2
+
+            origin = (centerX-roiSize//2, centerY-roiSize//2)
+            size = (roiSize, roiSize)
+
+            # Update roi start, stop position
+            self.updateRoi(origin, size)
+
+            # Relocate and resize ROI
+            roi = plot.getRoi()
+            _submit(roi.setOrigin, origin)
+            _submit(roi.setSize, size)
+            _submit(plot.toggleROI, True)
+
         else:
-            self.widgetImageStack.getPlotWidget().toggleROI(False)
+            _submit(plot.toggleROI, False)
 
     def magnificationCorrection(self):
         if self.absorbanceImage is not None:
@@ -578,7 +600,19 @@ class Main(qt.QMainWindow):
                     self.widgetPlotSpectrum.setFilename(self.basename)
                     self.widgetPlotSpectrum.setPath(str(Path(self.selected_path_h5).parent))
                     self.widgetPlotHistogram.setPath(str(Path(self.selected_path_h5).parent))
+
+                    minEnergy = min(self.energy_list)
+                    maxEnergy = max(self.energy_list)
+                    self.middle_index = len(self.energy_list) // 2
+
+                    # Set reference image
+                    self.spinBoxRefNum.setMinimum(0)
+                    self.spinBoxRefNum.setMaximum(len(self.energy_list) - 1)
+                    _submit(self.spinBoxRefNum.setValue, self.middle_index)
+
+                    _submit(self.widgetPlotShift.setGraphXLimits, minEnergy, maxEnergy)
                     self.toLog(f"Loaded {self.selected_path_h5}")
+
             except Exception as e:
                 self.toLog(f"Error : {e}")
                 return

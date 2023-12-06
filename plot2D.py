@@ -177,31 +177,19 @@ class Plot2D(PlotWindowCustom):
         # Create default ROI
         self._roi = RectangleROI()
         self._roi.setGeometry(origin=(640, 640), size=(200, 200))
-        self._roi.setName('Initial ROI')
+        self._roi.setName('ROI')
         self._roi.setEditable(True)
         self._roi.setVisible(False)
         self._roi.sigEditingFinished.connect(self.updateRoiRegion)
 
         self._roiManager.addRoi(self._roi)
 
-        # self._roiAction = qt.QAction(icons.getQIcon('image-select-box'), 'Toggle ROI', self)
-        # self._roiAction.setCheckable(True)
-        # self._roiAction.toggled.connect(self.toggleROI)
-        # self._toolbar.addAction(self._roiAction)
-
         # Set tif as default selection on save action
         try:
-            # remove oldSaveAction
-            # oldSaveAction = self._outputToolBar.getSaveAction()
-            # self._outputToolBar.removeAction(oldSaveAction)
-
             # create new saveAction
             saveAction = SaveAction(parent=self._outputToolBar, plot=self)
             self._outputToolBar._saveAction = saveAction
             self._outputToolBar.addAction(saveAction)
-
-            # imageFilters = self._outputToolBar.getSaveAction()._filters['image']
-            # imageFilters.move_to_end('Image data as EDF (*.edf)')
 
             # New copy action
             copyAction = CopyAction(parent=self._outputToolBar, plot=self)
@@ -213,11 +201,6 @@ class Plot2D(PlotWindowCustom):
 
     def toggleROI(self, checked):
         """Show/Hide ROI"""
-
-        # Automatically add a roi to RoiManager
-        if checked and self._roi not in self._roiManager._rois:
-            self._roiManager.addRoi(self._roi)
-
         self._roi.setVisible(checked)
 
     def getRoi(self):
