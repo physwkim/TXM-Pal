@@ -183,10 +183,13 @@ class Main(qt.QMainWindow):
 
     def getSpectrum(self, roi):
         """Get spectrum from ROI"""
+        ref_size = self.absorbanceImage[0].shape
         if isinstance(roi, roi_items.PointROI):
             position = roi.getPosition()
+            if position[0] < 0 or position[1] < 0 or position[0] > ref_size[0] -1 or position[1] > ref_size[1] - 1:
+                self.toLog("out of range!", "red")
             spectrum = self.absorbanceImage[:, floor(position[1]), floor(position[0])]
-            # print(f"position : {position}, spectrum : {spectrum}")
+
         elif isinstance(roi, roi_items.CircleROI):
             center = roi.getCenter()
             radius = roi.getRadius()
@@ -201,7 +204,9 @@ class Main(qt.QMainWindow):
             for yIdx in range(yStart, yStop):
                 for xIdx in range(xStart, xStop):
                     if (xIdx - center[0])**2 + (yIdx - center[1])**2 < radius**2:
-                        mask[yIdx, xIdx] = True
+                        if yIdx < mask.shape[0] and xIdx < mask.shape[1] and yIdx > 0 and xIdx > 0:
+                            mask[yIdx, xIdx] = True
+
             mask = np.invert(mask)
             maskArray = np.array([mask for _ in range(len(self.energy_list))])
             maskedData = np.ma.masked_array(self.absorbanceImage, mask=maskArray)
@@ -215,8 +220,18 @@ class Main(qt.QMainWindow):
             yStart = floor(origin[1])
             yStop = floor(origin[1] + size[1])
 
-            data = self.absorbanceImage[:, yStart:yStop, xStart:xStop]
-            spectrum = np.sum(data, axis=(1, 2))
+            ref_image = self.absorbanceImage[0]
+            mask = np.zeros_like(ref_image, dtype=bool)
+            for yIdx in range(yStart, yStop):
+                for xIdx in range(xStart, xStop):
+                    if yIdx > 0 and yIdx < ref_size[0] and xIdx > 0 and xIdx < ref_size[1]:
+                        mask[yIdx, xIdx] = True
+
+            mask = np.invert(mask)
+            maskArray = np.array([mask for _ in range(len(self.energy_list))])
+            maskedData = np.ma.masked_array(self.absorbanceImage, mask=maskArray)
+            spectrum = np.sum(maskedData, axis=(1, 2))
+
         else:
             return
 
@@ -234,7 +249,12 @@ class Main(qt.QMainWindow):
         for roi in rois:
             roi_name = roi.getName()
 
-            spectrum = self.getSpectrum(roi)
+            try:
+                spectrum = self.getSpectrum(roi)
+            except Exception as e:
+                self.toLog(f"Err : {e}", "red")
+                return
+
             curve = self.widgetPlotSpectrum.getCurve(roi_name)
 
             if curve:
