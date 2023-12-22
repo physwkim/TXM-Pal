@@ -26,7 +26,7 @@ import fabio
 import h5py
 
 # from utils import fitPeak
-from utils import magnification_corr_factors
+from utils import magnification_corr_factors, find_nearest
 
 from lmfitrs import quadfit_mc, gaussianfit_mc
 
@@ -726,6 +726,10 @@ class Main(qt.QMainWindow):
 
                 for idx, energy in enumerate(self.energy_list):
                     images = []
+                    if energy not in back_image_dict.keys():
+                        original_energy = energy
+                        energy = find_nearest(list(back_image_dict.keys()), energy)
+                        self.toLog(f"Error : {original_energy} not found in back images. Using nearest value {energy} instead.")
                     for f in back_image_dict[energy]:
                         image_path = os.path.join(back_path, f)
                         # print(f"image_path : {image_path}")

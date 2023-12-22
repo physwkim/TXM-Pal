@@ -26,6 +26,11 @@ def fitPeak(xdata, ydata, algorithm='Polynomial'):
 
     return cen
 
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return array[idx]
+
 """
 h = 6.62607015e-34  # Planck's constant in J*s
 c = 299792458  # Speed of light in m/s
