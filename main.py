@@ -11,7 +11,7 @@ import datetime
 from scipy.ndimage import median_filter
 from scipy.ndimage import shift
 from scipy.ndimage import affine_transform
-from skimage.registration import phase_cross_correlation
+# from skimage.registration import phase_cross_correlation
 
 import matplotlib
 matplotlib.use('Agg')
@@ -28,7 +28,7 @@ import h5py
 # from utils import fitPeak
 from utils import magnification_corr_factors, find_nearest
 
-from lmfitrs import quadfit_mc, gaussianfit_mc
+from lmfitrs import quadfit_mc, gaussianfit_mc, phase_cross_correlation_stack
 
 from roiTableWidget import RoiTableWidget
 
@@ -534,20 +534,37 @@ class Main(qt.QMainWindow):
     def alignImages(self):
         if self.absorbanceImage is not None:
             refImageIdx = self.spinBoxRefNum.value()
-            referenceImage = self.absorbanceImage[refImageIdx]
             upsample_factor = self.spinBoxUpFactor.value()
-            self.image_shifts = []
-            self.image_shifts_abs = []
-            self.toLog("Aligning...")
-            for idx, image in enumerate(self.absorbanceImage):
-                shift_values, error, diffphase = phase_cross_correlation(referenceImage,
-                                            image,
-                                            upsample_factor=upsample_factor)
-                self.image_shifts.append(shift_values)
-                self.absorbanceImage[idx] = shift(image, shift_values, mode='constant', cval=-10)
-                self.image_shifts_abs.append(np.linalg.norm(shift_values))
 
+            self.toLog("Aligning...")
+
+            ##### Using rust
+            shifts = phase_cross_correlation_stack(self.absorbanceImage.astype(np.float64),
+                                            refImageIdx,
+                                            upsample_factor)
+            self.image_shifts = shifts
+            self.image_shifts_abs = np.linalg.norm(shifts, axis=1)
+
+            # Shift images
+            for idx, image in enumerate(self.absorbanceImage):
+                self.absorbanceImage[idx] = shift(image, shifts[idx], mode='constant', cval=-10)
+
+            ##### Using scipy
+            # self.image_shifts = []
+            # self.image_shifts_abs = []
+            # for idx, image in enumerate(self.absorbanceImage):
+            #     shift_values, error, diffphase = phase_cross_correlation(self.absorbanceImage[refImageIdx], image,
+            #                                                                 upsample_factor=upsample_factor)
+            #     self.image_shifts.append(shift_values)
+            #     self.image_shifts_abs.append(np.linalg.norm(shift_values))
+            #     self.absorbanceImage[idx] = shift(image, shift_values, mode='constant', cval=-10)
+
+            # print(f"image shifts with scipy : {self.image_shifts}")
+
+            # To numpy array
             self.image_shifts = np.array(self.image_shifts)
+
+            # self.image_shifts = np.array(self.image_shifts)
             shiftXMin = floor(np.min(self.image_shifts[:, 1]))
             shiftXMax = ceil(np.max(self.image_shifts[:, 1]))
             shiftYMin = floor(np.min(self.image_shifts[:, 0]))
