@@ -472,6 +472,15 @@ class Main(qt.QMainWindow):
             peak_average = np.nanmean(self.peak_image)
             # self.peak_image[np.abs(self.peak_image - peak_average) > cutOff ] = np.nan
 
+            # Calibrate Energy Shift
+            if self.groupBoxLargeAreaCal.isChecked():
+                energy_diff = self.doubleSpinBoxEnergyDifference.value()
+                num_pixel = self.doubleSpinBoxNumPixel.value()
+                slope = energy_diff / num_pixel
+                index_array = np.arange(self.peak_image.shape[0])
+                shifted_peak_image = self.peak_image.copy() - slope * index_array[:, None]
+                self.peak_image = shifted_peak_image
+
             # Average and standard deviation
             peak_image = self.peak_image.copy()
             peak_image[np.abs(self.peak_image - peak_average) > cutOff ] = np.nan
