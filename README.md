@@ -17,7 +17,7 @@
     - conda activate palxanes
 6) Install rust library
     - cd wheels
-    - pip install lmfitrs-0.1.4-cp38-none-win_amd64.whl
+    - pip install lmfitrs-0.1.5-cp38-none-win_amd64.whl
     - cd ..
 11) Run main.py
     - python main.py
