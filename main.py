@@ -25,7 +25,7 @@ import fabio
 import h5py
 
 # from utils import fitPeak
-from utils import magnification_corr_factors, find_nearest, update_images
+from utils import magnification_corr_factors, find_nearest
 
 from lmfitrs import quadfit_mc, gaussianfit_mc, phase_cross_correlation_stack, renormalize_absorbance_stack
 from roiTableWidget import RoiTableWidget
