@@ -1,7 +1,6 @@
 import numpy as np
 from lmfit.models import GaussianModel, LinearModel, PolynomialModel
 from io import BytesIO
-import dask.array as da
 
 def fitPeak(xdata, ydata, algorithm='Polynomial'):
     """Do fit and return the center of the peak."""
@@ -70,9 +69,3 @@ def magnification_corr_factors(energies, magnification=6, zpDiameter=300e-6, zpO
     magFactors = aValues / bRealValues
 
     return np.divide(magFactors[0], magFactors)
-
-def update_images(line, idx, absorbanceImage, energy_list, slope):
-    interp_energy = energy_list - slope * line
-    absorbanceImageNew = np.zeros_like(absorbanceImage)
-    absorbanceImageNew[:, line, idx] = da.interp(energy_list, interp_energy, absorbanceImage[:, line, idx])
-    return absorbanceImageNew
