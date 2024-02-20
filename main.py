@@ -22,9 +22,6 @@ from silx.gui import qt
 from silx.gui.plot.items import roi as roi_items
 from silx.gui.utils.concurrent import submitToQtMainThread as _submit
 import fabio
-import dask
-import dask.array as da
-
 import h5py
 
 # from utils import fitPeak
