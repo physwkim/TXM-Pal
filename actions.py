@@ -28,21 +28,34 @@ class CopyAction(PlotAction):
 
     def copyPlot(self):
         """Copy a snapshot of the plot into the clipboard"""
-        title = self.plot.getGraphTitle()
-        data = self.plot.getImage().getData()
+        try:
+            title = self.plot.getGraphTitle()
+            data = self.plot.getImage().getData()
 
-        pngFile = BytesIO()
-        plt.figure(figsize=(10, 10))
-        plt.imshow(data, origin='lower')
-        plt.title(title, fontdict={'fontsize': 30})
-        plt.savefig(pngFile, format='png', bbox_inches='tight')
+            # Get colormap
+            colorbar = self.plot.getColorBarWidget()
+            colormap = colorbar.getColormap()
 
-        pngFile.flush()
-        pngFile.seek(0)
-        pngData = pngFile.read()
+            vmin = colormap.getVMin()
+            vmax = colormap.getVMax()
+            cm_name = colormap.getName()
 
-        image = qt.QImage.fromData(pngData, 'png')
-        qt.QApplication.clipboard().setImage(image)
+            pngFile = BytesIO()
+            plt.figure(figsize=(10, 10))
+            plt.imshow(data, origin='lower', cmap=cm_name, vmin=vmin, vmax=vmax)
+            plt.title(title, fontdict={'fontsize': 30})
+            plt.savefig(pngFile, format='png', bbox_inches='tight')
+
+            pngFile.flush()
+            pngFile.seek(0)
+            pngData = pngFile.read()
+
+            image = qt.QImage.fromData(pngData, 'png')
+            qt.QApplication.clipboard().setImage(image)
+        except Exception as e:
+            qt.QMessageBox.critical(
+                self.plot, "Error",
+                "Failed to copy plot to clipboard: %s" % e)
 
 
 class SaveAction(_SaveAction):
@@ -84,12 +97,31 @@ class SaveAction(_SaveAction):
                 plot, "No Data", "No image to be saved")
             return False
 
-        data = image.getData(copy=False)
-        plt.figure(figsize=(10, 10))
-        plt.imshow(data, origin='lower')
-        plt.axis('off')
-        plt.gca().set_position([0, 0, 1, 1])
-        plt.savefig(filename, format='png', bbox_inches='tight', pad_inches=0)
+        try:
+            # Retrieve data
+            data = image.getData(copy=False)
+
+            # Get colormap
+            colorbar = plot.getColorBarWidget()
+            colormap = colorbar.getColormap()
+
+            vmin = colormap.getVMin()
+            vmax = colormap.getVMax()
+            cm_name = colormap.getName()
+
+            pngFile = BytesIO()
+            plt.figure(figsize=(10, 10))
+            plt.imshow(data, origin='lower', cmap=cm_name, vmin=vmin, vmax=vmax)
+            plt.axis('off')
+            plt.gca().set_position([0, 0, 1, 1])
+            plt.savefig(filename, format='png', bbox_inches='tight', pad_inches=0)
+
+        except Exception as e:
+            qt.QMessageBox.critical(
+                plot, "Error",
+                "Failed to save image: %s" % e)
+            return False
+
         return True
 
 
