@@ -22,15 +22,17 @@ from silx.gui import qt
 from silx.gui.plot.items import roi as roi_items
 from silx.gui.utils.concurrent import submitToQtMainThread as _submit
 import fabio
+import dask
+import dask.array as da
 
 import h5py
 
 # from utils import fitPeak
-from utils import magnification_corr_factors, find_nearest
+from utils import magnification_corr_factors, find_nearest, update_images
 
-from lmfitrs import quadfit_mc, gaussianfit_mc, phase_cross_correlation_stack
-
+from lmfitrs import quadfit_mc, gaussianfit_mc, phase_cross_correlation_stack, renormalize_absorbance_stack
 from roiTableWidget import RoiTableWidget
+from widgets import MainToolBar
 
 BASE_PATH = os.path.expanduser('~')
 
@@ -65,14 +67,18 @@ class Main(qt.QMainWindow):
         self.selected_mask_path = ""
         self.selected_path = ""
         self.selected_path_h5 = ""
+        self.event_queue = []
+        self.processing = False
 
         qt.loadUi('ui/main.ui', self)
 
-        # Adjust splitter ratio
-        self.splitterMain.setSizes([100, 900])
-
         self.setWindowTitle("PAL XANES")
         self.widgetImageStack.getPlotWidget().setDataBackgroundColor([0,0,0])
+
+        # Setup toolbar
+        self.toolbar = MainToolBar(self)
+        self.toolbar.sigSetPannel.connect(self.setPannel)
+        self.addToolBar(qt.Qt.TopToolBarArea, self.toolbar)
 
         # Shift Plot
         # self.widgetPlotShift.setGraphTitle("Shift")
@@ -146,6 +152,20 @@ class Main(qt.QMainWindow):
 
         # Fitting algorithm selection
         self.comboBoxSmoothAlgorithm.currentTextChanged.connect(self.updateSmoothAlgorithm)
+
+        # Adjust splitter ratio
+        self.mainSplitter.setSizes([800, 800])
+
+        # Select Preprocessing pannel
+        self.toolbar
+
+    def setPannel(self, pannel):
+        if pannel == "Preprocessing":
+            _submit(self.controlStackedWidget.setCurrentIndex, 0)
+        elif pannel == "Fitting":
+            _submit(self.controlStackedWidget.setCurrentIndex, 1)
+        elif pannel == "Spectrum Viewer":
+            _submit(self.controlStackedWidget.setCurrentIndex, 2)
 
     def updateSmoothAlgorithm(self, algorithm):
         if algorithm == "3point":
@@ -243,46 +263,62 @@ class Main(qt.QMainWindow):
         self.toLog(f"ROI removed : {roi_name}")
 
     def updateRoiSpectrum(self):
-        self.toLog("Updating ROI spectrum...")
-        rois = self.roiManager.getRois()
-        # print(f"rois : {[roi.getName() for roi in rois]}")
-        for roi in rois:
-            roi_name = roi.getName()
 
-            try:
-                spectrum = self.getSpectrum(roi)
-            except Exception as e:
-                self.toLog(f"Err : {e}", "red")
-                return
+        if self.processing:
+            self.event_queue.append(1)
+            return
+        else:
+            self.processing = True
+            self.event_queue.append(1)
 
-            curve = self.widgetPlotSpectrum.getCurve(roi_name)
+        while len(self.event_queue) > 0:
+            self.event_queue.clear()
+            self.event_queue.append(1)
 
-            if curve:
-                oldSpectrum = curve.getYData()
-                if np.any(oldSpectrum != spectrum):
-                    _submit(self.widgetPlotSpectrum.addCurve,
-                            self.energy_list,
-                            spectrum,
-                            legend=roi_name)
+            self.toLog("Updating ROI spectrum...")
+            rois = self.roiManager.getRois()
 
-            else:
-                rois = self.roiManager.getRois()
-                all_rois = [roi.getName() for roi in rois]
+            for roi in rois:
+                roi_name = roi.getName()
 
-                if roi_name in all_rois:
-                    _submit(self.widgetPlotSpectrum.addCurve,
-                            self.energy_list,
-                            spectrum,
-                            legend=roi_name)
+                try:
+                    spectrum = self.getSpectrum(roi)
+                except Exception as e:
+                    self.toLog(f"Err : {e}", "red")
+                    return
 
-        # cleanup curves
-        curves = self.widgetPlotSpectrum.getAllCurves()
-        rois = self.roiManager.getRois()
-        all_rois = [roi.getName() for roi in rois]
-        for curve in curves:
-            if curve.getLegend() not in all_rois:
-                _submit(self.widgetPlotSpectrum.removeCurve, curve.getLegend())
-        self.toLog("Updating ROI spectrum... done")
+                curve = self.widgetPlotSpectrum.getCurve(roi_name)
+
+                if curve:
+                    oldSpectrum = curve.getYData()
+                    if np.any(oldSpectrum != spectrum):
+                        _submit(self.widgetPlotSpectrum.addCurve,
+                                self.energy_list,
+                                spectrum,
+                                legend=roi_name)
+
+                else:
+                    rois = self.roiManager.getRois()
+                    all_rois = [roi.getName() for roi in rois]
+
+                    if roi_name in all_rois:
+                        _submit(self.widgetPlotSpectrum.addCurve,
+                                self.energy_list,
+                                spectrum,
+                                legend=roi_name)
+
+            # cleanup curves
+            curves = self.widgetPlotSpectrum.getAllCurves()
+            rois = self.roiManager.getRois()
+            all_rois = [roi.getName() for roi in rois]
+            for curve in curves:
+                if curve.getLegend() not in all_rois:
+                    _submit(self.widgetPlotSpectrum.removeCurve, curve.getLegend())
+            self.toLog("Updating ROI spectrum... done")
+
+            self.event_queue.pop()
+
+        self.processing = False
 
     def toggleROI(self, state):
         plot = self.widgetImageStack.getPlotWidget()
@@ -468,21 +504,28 @@ class Main(qt.QMainWindow):
                                               window_length,
                                               polyorder)
 
-            # Reject outliers
-            peak_average = np.nanmean(self.peak_image)
-            # self.peak_image[np.abs(self.peak_image - peak_average) > cutOff ] = np.nan
-
             # Calibrate Energy Shift
             if self.groupBoxLargeAreaCal.isChecked():
+                shape = self.peak_image.shape
                 energy_diff = self.doubleSpinBoxEnergyDifference.value()
                 num_pixel = self.doubleSpinBoxNumPixel.value()
                 slope = energy_diff / num_pixel
-                index_array = np.arange(self.peak_image.shape[0])
+                index_array = np.arange(shape[0])
                 shifted_peak_image = self.peak_image.copy() - slope * index_array[:, None]
                 self.peak_image = shifted_peak_image
 
+                # Update proj, back, and absorbance images
+                self.toLog("Calibrating absorbance images...")
+
+                self.absorbanceImage = renormalize_absorbance_stack(self.energy_list,
+                                                                    self.absorbanceImage.astype(np.float64),
+                                                                    slope)
+                self.toLog("Calibrating absorbance images... done")
+
+            # Reject outliers
             # Average and standard deviation
             peak_image = self.peak_image.copy()
+            peak_average = np.nanmean(self.peak_image)
             peak_image[np.abs(self.peak_image - peak_average) > cutOff ] = np.nan
             self.peak_energy_mean = np.nanmean(peak_image)
             self.peak_energy_std = np.nanstd(peak_image)
@@ -496,6 +539,8 @@ class Main(qt.QMainWindow):
             # Clear mask
             _submit(self.maskToolsWidget._handleClearMask)
             self.toLog("Calculating peak fitting... done")
+        else:
+            self.toLog("Please calculate thickness first", "red")
 
     def calcThickness(self):
         if self.absorbanceImage is not None:
@@ -630,7 +675,7 @@ class Main(qt.QMainWindow):
         """Append to log widget"""
         time_string = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         text = f"[ {time_string} ] {text}"
-        _submit(self.textEditLog.append, text)
+        _submit(self.logTextEdit.append, text)
 
     def load_h5(self):
         """Load energy, projection, background, and absorbance images from h5 file"""
@@ -662,6 +707,8 @@ class Main(qt.QMainWindow):
             except Exception as e:
                 self.toLog(f"Error : {e}")
                 return
+        else:
+            self.toLog(f"Error : {self.selected_path_h5} not found")
 
     def load(self):
         self.energy_list = []
@@ -796,6 +843,10 @@ class Main(qt.QMainWindow):
                 self.widgetPlotSpectrum.setFilename(self.basename)
 
                 self.toLog(f"loading done")
+            else:
+                self.toLog("Error : Folder name should end with '_proj' or '_back'")
+        else:
+            self.toLog("Error : Path not found")
 
     def select_load_path(self):
         """ Select data save path """
