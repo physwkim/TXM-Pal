@@ -388,28 +388,33 @@ class Main(qt.QMainWindow):
 
         save_file = os.path.join(save_path, f"{self.basename}_result_{num:d}.h5")
 
-        with h5py.File(save_file, "w") as f:
-            entry_1 = f.create_group("entry_1")
-            entry_1.create_dataset("energies", data=self.energy_list)
-            entry_1.create_dataset("absorbance", data=self.absorbanceImage)
-            entry_1.create_dataset("projection", data=self.projImage)
-            entry_1.create_dataset("background", data=self.backImage)
-            entry_1.create_dataset("thickness", data=self.thickness_image)
-            entry_1.create_dataset("concentration", data=self.concentration_image)
-            entry_1.create_dataset("peak", data=self.peak_image)
-            entry_1.create_dataset("peak_energy_mean", data=self.peak_energy_mean)
-            entry_1.create_dataset("peak_energy_std", data=self.peak_energy_std)
-            entry_1.create_dataset("histogram_bins", data=self.histogram[1])
-            entry_1.create_dataset("histogram_count", data=self.histogram[0])
+        try:
+            with h5py.File(save_file, "w") as f:
+                entry_1 = f.create_group("entry_1")
+                entry_1.create_dataset("energies", data=self.energy_list)
+                entry_1.create_dataset("absorbance", data=self.absorbanceImage)
+                entry_1.create_dataset("projection", data=self.projImage)
+                entry_1.create_dataset("background", data=self.backImage)
+                # entry_1.create_dataset("thickness", data=self.thickness_image)
+                # entry_1.create_dataset("concentration", data=self.concentration_image)
+                # entry_1.create_dataset("peak", data=self.peak_image)
+                # entry_1.create_dataset("peak_energy_mean", data=self.peak_energy_mean)
+                # entry_1.create_dataset("peak_energy_std", data=self.peak_energy_std)
+                # entry_1.create_dataset("histogram_bins", data=self.histogram[1])
+                # entry_1.create_dataset("histogram_count", data=self.histogram[0])
 
-        startE = self.doubleSpinBoxStartE.value()
-        stopE = self.doubleSpinBoxStopE.value()
-        title = f"{self.basename}, mean : {self.peak_energy_mean:.3f}, std : {self.peak_energy_std:.3f}\nstartE : {startE:.2f}, stopE : {stopE:.2f}\nsize : {self.concentration_image.shape[1]} x {self.concentration_image.shape[0]}"
-        img_file = os.path.join(save_path, f"{self.basename}_result_{num:d}.png")
-        plt.figure(figsize=(10, 10))
-        plt.imshow(self.concentration_image, origin='lower')
-        plt.title(title, fontdict={'fontsize': 30})
-        plt.savefig(img_file, format='png', bbox_inches='tight')
+        except Exception as e:
+            self.toLog(f"Error : {e}")
+            return
+
+        # startE = self.doubleSpinBoxStartE.value()
+        # stopE = self.doubleSpinBoxStopE.value()
+        # title = f"{self.basename}, mean : {self.peak_energy_mean:.3f}, std : {self.peak_energy_std:.3f}\nstartE : {startE:.2f}, stopE : {stopE:.2f}\nsize : {self.concentration_image.shape[1]} x {self.concentration_image.shape[0]}"
+        # img_file = os.path.join(save_path, f"{self.basename}_result_{num:d}.png")
+        # plt.figure(figsize=(10, 10))
+        # plt.imshow(self.concentration_image, origin='lower')
+        # plt.title(title, fontdict={'fontsize': 30})
+        # plt.savefig(img_file, format='png', bbox_inches='tight')
 
         self.toLog(f"Result saved to {save_file}")
 
