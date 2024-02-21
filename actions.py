@@ -36,13 +36,17 @@ class CopyAction(PlotAction):
             colorbar = self.plot.getColorBarWidget()
             colormap = colorbar.getColormap()
 
-            vmin = colormap.getVMin()
-            vmax = colormap.getVMax()
-            cm_name = colormap.getName()
-
             pngFile = BytesIO()
             plt.figure(figsize=(10, 10))
-            plt.imshow(data, origin='lower', cmap=cm_name, vmin=vmin, vmax=vmax)
+
+            if colormap is not None:
+                vmin = colormap.getVMin()
+                vmax = colormap.getVMax()
+                cm_name = colormap.getName()
+                plt.imshow(data, origin='lower', cmap=cm_name, vmin=vmin, vmax=vmax)
+            else:
+                plt.imshow(data, origin='lower')
+
             plt.title(title, fontdict={'fontsize': 30})
             plt.savefig(pngFile, format='png', bbox_inches='tight')
 
@@ -105,13 +109,17 @@ class SaveAction(_SaveAction):
             colorbar = plot.getColorBarWidget()
             colormap = colorbar.getColormap()
 
-            vmin = colormap.getVMin()
-            vmax = colormap.getVMax()
-            cm_name = colormap.getName()
-
             pngFile = BytesIO()
             plt.figure(figsize=(10, 10))
-            plt.imshow(data, origin='lower', cmap=cm_name, vmin=vmin, vmax=vmax)
+
+            if colormap is not None:
+                vmin = colormap.getVMin()
+                vmax = colormap.getVMax()
+                cm_name = colormap.getName()
+                plt.imshow(data, origin='lower', cmap=cm_name, vmin=vmin, vmax=vmax)
+            else:
+                plt.imshow(data, origin='lower')
+
             plt.axis('off')
             plt.gca().set_position([0, 0, 1, 1])
             plt.savefig(filename, format='png', bbox_inches='tight', pad_inches=0)
