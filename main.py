@@ -515,11 +515,12 @@ class Main(qt.QMainWindow):
                 index_array = np.arange(shape[0])
                 shifted_peak_image = self.peak_image.copy() - slope * index_array[:, None]
                 self.peak_image = shifted_peak_image
+                nrj = np.array(self.energy_list, dtype=np.float64)
 
                 # Update proj, back, and absorbance images
                 self.toLog("Calibrating absorbance images...")
 
-                self.absorbanceImage = renormalize_absorbance_stack(self.energy_list,
+                self.absorbanceImage = renormalize_absorbance_stack(nrj,
                                                                     self.absorbanceImage.astype(np.float64),
                                                                     slope)
                 self.toLog("Calibrating absorbance images... done")
