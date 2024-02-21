@@ -547,7 +547,7 @@ class Main(qt.QMainWindow):
             # Clear mask
             _submit(self.maskToolsWidget._handleClearMask)
             self.toLog("Calculating peak fitting... done")
-            _submit(qt.QMessageBox.information, plot, "Info", "Fitting finished")
+            # _submit(qt.QMessageBox.information, plot, "Info", "Fitting finished")
         else:
             self.toLog("Please calculate thickness first", "red")
 
