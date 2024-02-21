@@ -83,7 +83,7 @@ class Main(qt.QMainWindow):
         self.widgetPlotShift.setGraphYLabel("Shift (pixel)")
         self.widgetPlotShift.setBackgroundColor('#FCF9F6')
         self.widgetPlotShift.setDataMargins(0.01, 0.01, 0.01, 0.01)
-        self.widgetPlotShift.setAxesMargins(0.06, 0.05, 0.05, 0.05)
+        self.widgetPlotShift.setAxesMargins(0.1, 0.05, 0.05, 0.15)
 
         # Spectrum Plot
         self.widgetPlotSpectrum.setGraphXLabel("Energy (eV)")
@@ -91,11 +91,14 @@ class Main(qt.QMainWindow):
         self.widgetPlotSpectrum.getLegendsDockWidget().show()
         self.widgetPlotSpectrum.setBackgroundColor('#FCF9F6')
         self.widgetPlotSpectrum.setDataMargins(0.01, 0.01, 0.01, 0.01)
-        self.widgetPlotSpectrum.setAxesMargins(0.06, 0.05, 0.05, 0.05)
+        self.widgetPlotSpectrum.setAxesMargins(0.15, 0.05, 0.05, 0.1)
 
         # Histogram Plot
         self.widgetPlotHistogram.setGraphXLabel("Energy (eV)")
         self.widgetPlotHistogram.setGraphYLabel("Ratio")
+        self.widgetPlotHistogram.setBackgroundColor('#FCF9F6')
+        self.widgetPlotHistogram.setDataMargins(0.01, 0.01, 0.01, 0.01)
+        self.widgetPlotHistogram.setAxesMargins(0.12, 0.05, 0.05, 0.15)
 
         self.pushButtonHistogram.setCallable(self.plotHistogram)
 
