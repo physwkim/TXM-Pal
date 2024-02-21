@@ -355,6 +355,8 @@ class Main(qt.QMainWindow):
                 self.absorbanceImage[idx] = affine_transform(img, scaleMat)
             self.reloadDisplay()
             self.toLog("Correcting magnification... done")
+        else:
+            self.toLog("Please load images first", "red")
 
     def saveData(self):
         save_path = self.lineEditSavePath.text()
@@ -542,6 +544,7 @@ class Main(qt.QMainWindow):
             # Clear mask
             _submit(self.maskToolsWidget._handleClearMask)
             self.toLog("Calculating peak fitting... done")
+            _submit(qt.QMessageBox.information, plot, "Info", "Alignment finished")
         else:
             self.toLog("Please calculate thickness first", "red")
 
@@ -558,6 +561,8 @@ class Main(qt.QMainWindow):
             plot = self.widgetImageStack.getPlotWidget()
             _submit(plot.setGraphTitle, "Thickness")
             self.toLog("Calculating thickness... done")
+        else:
+            self.toLog("Please load images first", "red")
 
     def cropImage(self):
         xStart = self.spinBoxXStart.value()
@@ -643,6 +648,11 @@ class Main(qt.QMainWindow):
 
             _submit(self.widgetPlotShift.addCurve, self.energy_list, self.image_shifts_abs, legend="shift_abs", color='blue')
 
+            plot = self.widgetImageStack.getPlotWidget()
+            _submit(qt.QMessageBox.information, plot, "Info", "Alignment finished")
+        else:
+            self.toLog("Please load images first", "red")
+
     def applyFiltering(self):
         filter_type = self.comboBoxFilterType.currentText()
         filter_size = self.comboBoxFilterSize.currentIndex() * 2 + 3
@@ -654,6 +664,8 @@ class Main(qt.QMainWindow):
             # self.projImage = median_filter(self.projImage, size=kernel_size)
             self.toLog("Filter finished")
             self.reloadDisplay()
+        else:
+            self.toLog("Filter not supported", "red")
 
     def updateEnergy(self, energy):
         _submit(self.widgetPlotShift.addXMarker,
