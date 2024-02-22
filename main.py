@@ -230,11 +230,12 @@ class Main(qt.QMainWindow):
                     if (xIdx - center[0])**2 + (yIdx - center[1])**2 < radius**2:
                         if yIdx < mask.shape[0] and xIdx < mask.shape[1] and yIdx > 0 and xIdx > 0:
                             mask[yIdx, xIdx] = True
-
+            # counts for average
+            counts = np.sum(mask)
             mask = np.invert(mask)
             maskArray = np.array([mask for _ in range(len(self.energy_list))])
             maskedData = np.ma.masked_array(self.absorbanceImage, mask=maskArray)
-            spectrum = np.sum(maskedData, axis=(1, 2))
+            spectrum = np.sum(maskedData, axis=(1, 2)) / counts
 
         elif isinstance(roi, roi_items.RectangleROI):
             origin = roi.getOrigin()
@@ -251,10 +252,12 @@ class Main(qt.QMainWindow):
                     if yIdx > 0 and yIdx < ref_size[0] and xIdx > 0 and xIdx < ref_size[1]:
                         mask[yIdx, xIdx] = True
 
+            # counts for average
+            counts = np.sum(mask)
             mask = np.invert(mask)
             maskArray = np.array([mask for _ in range(len(self.energy_list))])
             maskedData = np.ma.masked_array(self.absorbanceImage, mask=maskArray)
-            spectrum = np.sum(maskedData, axis=(1, 2))
+            spectrum = np.sum(maskedData, axis=(1, 2)) / counts
 
         else:
             return
