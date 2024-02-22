@@ -124,6 +124,8 @@ class Main(qt.QMainWindow):
 
         # ROI Table
         self.roiTableWidget = RoiTableWidget(plot=self.widgetImageStack.getPlotWidget())
+        self.roiTableWidget.sigClearRoiCurves.connect(self.widgetPlotSpectrum.clearCurves)
+
         layout = self.widgetRoiTableHolder.parent().layout()
         layout.replaceWidget(self.widgetRoiTableHolder, self.roiTableWidget)
         self.roiManager = self.roiTableWidget.roiManager

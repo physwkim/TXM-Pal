@@ -4,6 +4,8 @@ from silx.gui import qt
 from silx.gui.plot.tools.roi import RegionOfInterestManager
 from silx.gui.plot.tools.roi import RegionOfInterestTableWidget
 from silx.gui.plot.items import SymbolMixIn
+from silx.gui import icons
+from silx.gui.utils.concurrent import submitToQtMainThread as _submit
 
 roiClasses = ('PointROI', 'RectangleROI', 'CircleROI')
 
@@ -36,8 +38,6 @@ def updateAddedRegionOfInterest(roi):
             index = i
             break
 
-    print(f"roiIndexes: {roiIndexes}, index : {index}")
-
     if roi.getName() == '':
         roi.setName(f'ROI {index}')
     if isinstance(roi, SymbolMixIn):
@@ -46,14 +46,13 @@ def updateAddedRegionOfInterest(roi):
     roi.setEditable(True)
 
 class RoiTableWidget(qt.QWidget):
+    sigClearRoiCurves = qt.Signal()
+
     def __init__(self, parent=None, plot=None):
         super(RoiTableWidget, self).__init__(parent)
         self.roiManager = RegionOfInterestManagerCustom(parent=plot)
         self.roiManager.setColor('pink')
         self.roiManager.sigRoiAdded.connect(updateAddedRegionOfInterest)
-        # self.roiManager.sigRoiAdded.connect(self._roiAdded)
-        # self.roiManager.sigRoiRemoved.connect(self._roiRemoved)
-        # self.roiManager.sigRoiChanged.connect(self._roiChanged)
 
         self.roiTable = RegionOfInterestTableWidget()
         self.roiTable.setRegionOfInterestManager(self.roiManager)
@@ -65,6 +64,13 @@ class RoiTableWidget(qt.QWidget):
             if roiClass.__name__ in roiClasses:
                 action = self.roiManager.getInteractionModeAction(roiClass)
                 self.roiToolbar.addAction(action)
+
+        # Need to delete all rois action
+        icon = icons.getQIcon("remove")
+        action = qt.QAction(icon, "Delete all ROIs", self)
+        action.triggered.connect(self.roiManager.clear)
+        action.triggered.connect(self.sigClearRoiCurves.emit)
+        self.roiToolbar.addAction(action)
 
         layout = qt.QVBoxLayout()
         layout.addWidget(self.roiToolbar)
