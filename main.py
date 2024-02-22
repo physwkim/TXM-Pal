@@ -21,7 +21,6 @@ from matplotlib.colors import hsv_to_rgb
 from silx.gui import qt
 from silx.gui.plot.items import roi as roi_items
 from silx.gui.utils.concurrent import submitToQtMainThread as _submit
-import fabio
 import h5py
 
 # from utils import fitPeak
@@ -130,7 +129,12 @@ class Main(qt.QMainWindow):
         self.roiManager = self.roiTableWidget.roiManager
 
         self.roiManager.sigRoiAboutToBeRemoved.connect(self.removeRoiSpectrum)
-        self.roiManager.sigRoiChanged.connect(self.updateRoiSpectrum)
+
+        # Initial creation of curve
+        self.roiManager.sigInteractiveRoiFinalized.connect(self.updateRoiSpectrum)
+
+        # Update ROI spectrum
+        self.roiManager.sigUpdatedRoi.connect(self.updateRoiSpectrum)
 
         # ROI for cropping
         imgWidget = self.widgetImageStack.getPlotWidget()
@@ -262,23 +266,13 @@ class Main(qt.QMainWindow):
         _submit(self.widgetPlotSpectrum.removeCurve, roi_name)
         self.toLog(f"ROI removed : {roi_name}")
 
-    def updateRoiSpectrum(self):
+    def updateRoiSpectrum(self, roi_updated):
+        self.toLog("Updating ROI spectrum...")
+        rois = self.roiManager.getRois()
 
-        if self.processing:
-            self.event_queue.append(1)
-            return
-        else:
-            self.processing = True
-            self.event_queue.append(1)
-
-        while len(self.event_queue) > 0:
-            self.event_queue.clear()
-            self.event_queue.append(1)
-
-            self.toLog("Updating ROI spectrum...")
-            rois = self.roiManager.getRois()
-
-            for roi in rois:
+        for roi in rois:
+            roi_name = roi.getName()
+            if roi_updated.getName() == roi.getName():
                 roi_name = roi.getName()
 
                 try:
@@ -315,10 +309,6 @@ class Main(qt.QMainWindow):
                 if curve.getLegend() not in all_rois:
                     _submit(self.widgetPlotSpectrum.removeCurve, curve.getLegend())
             self.toLog("Updating ROI spectrum... done")
-
-            self.event_queue.pop()
-
-        self.processing = False
 
     def toggleROI(self, state):
         plot = self.widgetImageStack.getPlotWidget()
@@ -720,6 +710,21 @@ class Main(qt.QMainWindow):
                     _submit(self.spinBoxRefNum.setValue, self.middle_index)
 
                     _submit(self.widgetPlotShift.setGraphXLimits, minEnergy, maxEnergy)
+
+
+                    # Get Selection and display
+                    if self.checkBoxAbsorbance.isChecked():
+                        imgStack = self.absorbanceImage
+                    elif self.checkBoxBackground.isChecked():
+                        imgStack = self.backImage
+                    else:
+                        imgStack = self.projImage
+
+                    _submit(self.widgetImageStack.setStack, imgStack)
+                    _submit(self.widgetImageStack.resetZoom)
+                    _submit(self.widgetImageStack.setCurrentIndex, self.middle_index)
+                    self.widgetImageStack._energy_list = self.energy_list
+
                     self.toLog(f"Loaded {self.selected_path_h5}")
 
             except Exception as e:

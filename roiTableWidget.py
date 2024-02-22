@@ -7,6 +7,21 @@ from silx.gui.plot.items import SymbolMixIn
 
 roiClasses = ('PointROI', 'RectangleROI', 'CircleROI')
 
+class RegionOfInterestManagerCustom(RegionOfInterestManager):
+    sigUpdatedRoi = qt.Signal(object)
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        plot = self.parent()
+        plot.sigPlotSignal.connect(self.updateInteraction)
+
+    def updateInteraction(self, event):
+        """emit update roi signal when markerMoved event is triggered."""
+        if event['event'] == 'markerMoved':
+            currentRoi = self.getCurrentRoi()
+            self.sigUpdatedRoi.emit(currentRoi)
+
+
 def updateAddedRegionOfInterest(roi):
     rois = roi.parent().getRois()
     roiIndexes = []
@@ -33,7 +48,7 @@ def updateAddedRegionOfInterest(roi):
 class RoiTableWidget(qt.QWidget):
     def __init__(self, parent=None, plot=None):
         super(RoiTableWidget, self).__init__(parent)
-        self.roiManager = RegionOfInterestManager(parent=plot)
+        self.roiManager = RegionOfInterestManagerCustom(parent=plot)
         self.roiManager.setColor('pink')
         self.roiManager.sigRoiAdded.connect(updateAddedRegionOfInterest)
         # self.roiManager.sigRoiAdded.connect(self._roiAdded)
