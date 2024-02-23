@@ -11,7 +11,6 @@ import datetime
 from scipy.ndimage import median_filter
 from scipy.ndimage import shift
 from scipy.ndimage import affine_transform
-# from skimage.registration import phase_cross_correlation
 
 import matplotlib
 matplotlib.use('Agg')
