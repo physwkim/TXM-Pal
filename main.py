@@ -162,8 +162,10 @@ class Main(qt.QMainWindow):
         # Adjust splitter ratio
         self.mainSplitter.setSizes([800, 800])
 
-        # Select Preprocessing pannel
-        self.toolbar
+        # Disable zoom on wheel
+        self.widgetPlotSpectrum.setInteractiveMode("zoom", zoomOnWheel=False)
+        self.widgetPlotHistogram.setInteractiveMode("zoom", zoomOnWheel=False)
+        self.widgetPlotShift.setInteractiveMode("zoom", zoomOnWheel=False)
 
     def setPannel(self, pannel):
         if pannel == "Preprocessing":
