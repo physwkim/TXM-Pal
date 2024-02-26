@@ -39,6 +39,14 @@ if os.name == 'nt':
     # Use highdpi icons
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
+if getattr(sys, 'frozen', False):
+    # in exe file
+    application_path = sys._MEIPASS
+else:
+    # started in script
+    application_path = os.path.dirname(os.path.abspath(__file__))
+
+ui_path = os.path.join(application_path, 'ui/main.ui')
 
 class Main(qt.QMainWindow):
     """Main Window"""
@@ -65,7 +73,7 @@ class Main(qt.QMainWindow):
         self.event_queue = []
         self.processing = False
 
-        qt.loadUi('ui/main.ui', self)
+        qt.loadUi(ui_path, self)
 
         self.setWindowTitle("PAL XANES")
         self.widgetImageStack.getPlotWidget().setDataBackgroundColor([0,0,0])
