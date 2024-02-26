@@ -174,6 +174,10 @@ class Main(qt.QMainWindow):
         self.widgetPlotHistogram.setInteractiveMode("zoom", zoomOnWheel=False)
         self.widgetPlotShift.setInteractiveMode("zoom", zoomOnWheel=False)
 
+        # Set window icon
+        icon_path = os.path.join(application_path, 'mainicon.ico')
+        self.setWindowIcon(qt.QIcon(icon_path))
+
     def setPannel(self, pannel):
         if pannel == "Preprocessing":
             _submit(self.controlStackedWidget.setCurrentIndex, 0)
