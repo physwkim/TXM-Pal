@@ -174,9 +174,17 @@ class Main(qt.QMainWindow):
         self.widgetPlotHistogram.setInteractiveMode("zoom", zoomOnWheel=False)
         self.widgetPlotShift.setInteractiveMode("zoom", zoomOnWheel=False)
 
+        # Horizontal slider
+        self.horizontalSliderAdj.setRange(0, 100)
+        self.horizontalSliderAdj.valueChanged.connect(self.updateAdjLabel)
+
         # Set window icon
         icon_path = os.path.join(application_path, 'mainicon.ico')
         self.setWindowIcon(qt.QIcon(icon_path))
+
+    def updateAdjLabel(self, value):
+        lbl = f"{value}"
+        _submit(self.labelThicknessAdj.setText, lbl)
 
     def setPannel(self, pannel):
         if pannel == "Preprocessing":
@@ -417,15 +425,6 @@ class Main(qt.QMainWindow):
             self.toLog(f"Error : {e}")
             return
 
-        # startE = self.doubleSpinBoxStartE.value()
-        # stopE = self.doubleSpinBoxStopE.value()
-        # title = f"{self.basename}, mean : {self.peak_energy_mean:.3f}, std : {self.peak_energy_std:.3f}\nstartE : {startE:.2f}, stopE : {stopE:.2f}\nsize : {self.concentration_image.shape[1]} x {self.concentration_image.shape[0]}"
-        # img_file = os.path.join(save_path, f"{self.basename}_result_{num:d}.png")
-        # plt.figure(figsize=(10, 10))
-        # plt.imshow(self.concentration_image, origin='lower')
-        # plt.title(title, fontdict={'fontsize': 30})
-        # plt.savefig(img_file, format='png', bbox_inches='tight')
-
         self.toLog(f"Result saved to {save_file}")
 
     def calcConcentration(self):
@@ -447,7 +446,22 @@ class Main(qt.QMainWindow):
         hsv = np.zeros((shape[0], shape[1], 3))
         hsv[:, :, 0] = conc * (1/3)
         hsv[:, :, 1] = np.ones_like(conc)
-        hsv[:, :, 2] = thickness_img / np.nanmax(thickness_img)
+
+        slider_value = self.horizontalSliderAdj.value()
+        if slider_value == 100:
+            # use the maximum thickness as it is
+            max_value = np.nanmax(thickness_img)
+        else:
+            # Calculate the new maximum value based on the slider's value
+            max_value = np.nanmax(thickness_img) * (slider_value / 100.0)
+
+        # Adjust the image's maximum value
+        adjusted_img = np.minimum(thickness_img, max_value)
+
+        # Normalize the image
+        normalized_img = adjusted_img / max_value
+
+        hsv[:, :, 2] = normalized_img
 
         # Convert HSV to RGB
         rgb = hsv_to_rgb(hsv)
@@ -622,18 +636,6 @@ class Main(qt.QMainWindow):
             for idx, image in enumerate(self.absorbanceImage):
                 self.absorbanceImage[idx] = shift(image, shifts[idx], mode='constant', cval=-10)
 
-            ##### Using scipy
-            # self.image_shifts = []
-            # self.image_shifts_abs = []
-            # for idx, image in enumerate(self.absorbanceImage):
-            #     shift_values, error, diffphase = phase_cross_correlation(self.absorbanceImage[refImageIdx], image,
-            #                                                                 upsample_factor=upsample_factor)
-            #     self.image_shifts.append(shift_values)
-            #     self.image_shifts_abs.append(np.linalg.norm(shift_values))
-            #     self.absorbanceImage[idx] = shift(image, shift_values, mode='constant', cval=-10)
-
-            # print(f"image shifts with scipy : {self.image_shifts}")
-
             # To numpy array
             self.image_shifts = np.array(self.image_shifts)
 
@@ -671,8 +673,6 @@ class Main(qt.QMainWindow):
         if filter_type == 'Median':
             kernel_size = (1, filter_size, filter_size)
             self.absorbanceImage = median_filter(self.absorbanceImage, size=kernel_size)
-            # self.backImage = median_filter(self.backImage, size=kernel_size)
-            # self.projImage = median_filter(self.projImage, size=kernel_size)
             self.toLog("Filter finished")
             self.reloadDisplay()
         else:
