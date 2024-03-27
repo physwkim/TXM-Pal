@@ -13,6 +13,8 @@ from silx.gui.utils.image import convertArrayToQImage
 
 import matplotlib.pyplot as plt
 
+DPI = 600
+
 class CopyAction(PlotAction):
     """QAction to copy :class: '.PlotWidget' content to clipboard.
     """
@@ -37,7 +39,7 @@ class CopyAction(PlotAction):
             colormap = colorbar.getColormap()
 
             pngFile = BytesIO()
-            plt.figure(figsize=(10, 10))
+            plt.figure(figsize=(10, 10), dpi=DPI)
 
             if colormap is not None:
                 vmin = colormap.getVMin()
@@ -48,7 +50,7 @@ class CopyAction(PlotAction):
                 plt.imshow(data, origin='lower')
 
             plt.title(title, fontdict={'fontsize': 30})
-            plt.savefig(pngFile, format='png', bbox_inches='tight')
+            plt.savefig(pngFile, format='png', bbox_inches='tight', dpi=DPI)
 
             pngFile.flush()
             pngFile.seek(0)
@@ -110,7 +112,7 @@ class SaveAction(_SaveAction):
             colormap = colorbar.getColormap()
 
             pngFile = BytesIO()
-            plt.figure(figsize=(10, 10))
+            plt.figure(figsize=(10, 10), dpi=DPI)
 
             if colormap is not None:
                 vmin = colormap.getVMin()
@@ -122,7 +124,7 @@ class SaveAction(_SaveAction):
 
             plt.axis('off')
             plt.gca().set_position([0, 0, 1, 1])
-            plt.savefig(filename, format='png', bbox_inches='tight', pad_inches=0)
+            plt.savefig(filename, format='png', bbox_inches='tight', pad_inches=0, dpi=DPI)
 
         except Exception as e:
             qt.QMessageBox.critical(
