@@ -61,6 +61,7 @@ class Main(qt.QMainWindow):
 
         self.basename = ""
         self.absorbanceImage = None
+        self._preprocessImage = None
         self.backImage = None
         self.projImage = None
         self.middle_index = 0
@@ -372,6 +373,8 @@ class Main(qt.QMainWindow):
                 cf = corr_factors[idx]
                 scaleMat = np.array([[cf,0,0], [0, cf, 0], [0, 0, 1]])
                 self.absorbanceImage[idx] = affine_transform(img, scaleMat)
+
+            self._preprocessImage = self.absorbanceImage.copy()
             self.reloadDisplay()
             self.toLog("Correcting magnification... done")
         else:
@@ -410,7 +413,7 @@ class Main(qt.QMainWindow):
             with h5py.File(save_file, "w") as f:
                 entry_1 = f.create_group("entry_1")
                 entry_1.create_dataset("energies", data=self.energy_list)
-                entry_1.create_dataset("absorbance", data=self.absorbanceImage)
+                entry_1.create_dataset("absorbance", data=self._preprocessImage)
                 entry_1.create_dataset("projection", data=self.projImage)
                 entry_1.create_dataset("background", data=self.backImage)
                 # entry_1.create_dataset("thickness", data=self.thickness_image)
@@ -496,7 +499,7 @@ class Main(qt.QMainWindow):
             fitPoints = self.spinBoxFitPoints.value()
 
             nrj = np.array(self.energy_list, dtype=np.float64)
-            stack = np.array(self.absorbanceImage, dtype=np.float64)
+            stack = np.array(self._preprocessImage, dtype=np.float64)
 
             if self.groupBoxFitRange.isChecked():
                 startE = self.doubleSpinBoxFitStartE.value()
@@ -578,8 +581,8 @@ class Main(qt.QMainWindow):
             self.toLog("Calculating thickness...")
             num_pre_edge = self.spinBoxNumPreEdge.value()
             num_post_edge = self.spinBoxNumPostEdge.value()
-            image_pre_edge = np.mean(self.absorbanceImage[:num_pre_edge], axis=0)
-            image_post_edge = np.mean(self.absorbanceImage[-num_post_edge:], axis=0)
+            image_pre_edge = np.mean(self._preprocessImage[:num_pre_edge], axis=0)
+            image_post_edge = np.mean(self._preprocessImage[-num_post_edge:], axis=0)
             thickness = image_post_edge - image_pre_edge
             self.thickness_image = thickness
             self.widgetImageStack.setStack(self.thickness_image)
@@ -596,6 +599,7 @@ class Main(qt.QMainWindow):
         yStop = self.spinBoxYStop.value()
 
         self.absorbanceImage = self.absorbanceImage[:, yStart:yStop, xStart:xStop]
+        self._preprocessImage = self.absorbanceImage.copy()
         self.backImage = self.backImage[:, yStart:yStop, xStart:xStop]
         self.projImage = self.projImage[:, yStart:yStop, xStart:xStop]
         self.toLog("Image cropped")
@@ -656,6 +660,7 @@ class Main(qt.QMainWindow):
             else:
                 self.absorbanceImage = self.absorbanceImage[:, shiftYMax:, shiftXMax:]
 
+            self._preprocessImage = self.absorbanceImage.copy()
             self.reloadDisplay()
             self.toLog("Aligning... done")
 
@@ -673,6 +678,7 @@ class Main(qt.QMainWindow):
         if filter_type == 'Median':
             kernel_size = (1, filter_size, filter_size)
             self.absorbanceImage = median_filter(self.absorbanceImage, size=kernel_size)
+            self._preprocessImage = self.absorbanceImage.copy()
             self.toLog("Filter finished")
             self.reloadDisplay()
         else:
@@ -711,6 +717,7 @@ class Main(qt.QMainWindow):
                     entry_1 = f["entry_1"]
                     self.energy_list = entry_1["energies"][()]
                     self.absorbanceImage = entry_1["absorbance"][()]
+                    self._preprocessImage = self.absorbanceImage.copy()
                     self.projImage = entry_1["projection"][()]
                     self.backImage = entry_1["background"][()]
                     self.basename = os.path.basename(self.selected_path_h5)[:-3].split('_result')[0]
@@ -860,6 +867,7 @@ class Main(qt.QMainWindow):
 
                 # Calculate absorbance
                 self.absorbanceImage = -np.log(self.projImage / self.backImage)
+                self._preprocessImage = self.absorbanceImage.copy()
 
                 # Get Selection and display
                 if self.checkBoxAbsorbance.isChecked():
