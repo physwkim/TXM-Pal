@@ -129,6 +129,7 @@ class Main(qt.QMainWindow):
         self.pushButtonFiltering.setCallable(self.applyFiltering)
         self.pushButtonMagCorr.setCallable(self.magnificationCorrection)
         self.pushButtonAlign.setCallable(self.alignImages)
+        self.pushButtonAuto.setCallable(self.doAuto)
 
         # ROI Table
         self.roiTableWidget = RoiTableWidget(plot=self.widgetImageStack.getPlotWidget())
@@ -182,6 +183,27 @@ class Main(qt.QMainWindow):
         # Set window icon
         icon_path = os.path.join(application_path, 'mainicon.ico')
         self.setWindowIcon(qt.QIcon(icon_path))
+
+    def doAuto(self):
+        filtering = self.checkBoxAutoFilter.isChecked()
+        magCorr = self.checkBoxAutoMagCorr.isChecked()
+        align = self.checkBoxAutoAlign.isChecked()
+        numAlign = self.spinBoxAutoAlignNum.value()
+
+        if filtering:
+            self.applyFiltering()
+
+        if magCorr:
+            self.magnificationCorrection()
+
+        if align:
+            for idx in range(numAlign):
+                self.toLog(f"{idx+1} / {numAlign} aligning...")
+                if idx == numAlign-1:
+                    notify = True
+                else:
+                    notify = False
+                self.alignImages(notify=notify)
 
     def updateAdjLabel(self, value):
         lbl = f"{value}"
@@ -622,7 +644,7 @@ class Main(qt.QMainWindow):
         _submit(self.spinBoxYStop.setValue, yStop)
 
 
-    def alignImages(self):
+    def alignImages(self, notify=True):
         if self.absorbanceImage is not None:
             refImageIdx = self.spinBoxRefNum.value()
             upsample_factor = self.spinBoxUpFactor.value()
@@ -666,8 +688,9 @@ class Main(qt.QMainWindow):
 
             _submit(self.widgetPlotShift.addCurve, self.energy_list, self.image_shifts_abs, legend="shift_abs", color='blue')
 
-            plot = self.widgetImageStack.getPlotWidget()
-            _submit(qt.QMessageBox.information, plot, "Info", "Alignment finished")
+            if notify:
+                plot = self.widgetImageStack.getPlotWidget()
+                _submit(qt.QMessageBox.information, plot, "Info", "Alignment finished")
         else:
             self.toLog("Please load images first", "red")
 
