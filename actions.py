@@ -13,7 +13,7 @@ from silx.gui.utils.image import convertArrayToQImage
 
 import matplotlib.pyplot as plt
 
-DPI = 600
+DPI=300
 
 class CopyAction(PlotAction):
     """QAction to copy :class: '.PlotWidget' content to clipboard.
@@ -45,9 +45,18 @@ class CopyAction(PlotAction):
                 vmin = colormap.getVMin()
                 vmax = colormap.getVMax()
                 cm_name = colormap.getName()
-                plt.imshow(data, origin='lower', cmap=cm_name, vmin=vmin, vmax=vmax)
+                plt.imshow(data,
+                           origin='lower',
+                           cmap=cm_name,
+                           vmin=vmin,
+                           vmax=vmax,
+                           interpolation='none',
+                           interpolation_stage='rgba')
             else:
-                plt.imshow(data, origin='lower')
+                plt.imshow(data,
+                           origin='lower',
+                           interpolation='none',
+                           interpolation_stage='rgba')
 
             plt.title(title, fontdict={'fontsize': 30})
             plt.savefig(pngFile, format='png', bbox_inches='tight', dpi=DPI)
@@ -118,9 +127,18 @@ class SaveAction(_SaveAction):
                 vmin = colormap.getVMin()
                 vmax = colormap.getVMax()
                 cm_name = colormap.getName()
-                plt.imshow(data, origin='lower', cmap=cm_name, vmin=vmin, vmax=vmax)
+                plt.imshow(data,
+                           origin='lower',
+                           cmap=cm_name,
+                           vmin=vmin,
+                           vmax=vmax,
+                           interpolation='none',
+                           interpolation_stage='rgba')
             else:
-                plt.imshow(data, origin='lower')
+                plt.imshow(data,
+                           origin='lower',
+                           interpolation='none',
+                           interpolation_stage='rgba')
 
             plt.axis('off')
             plt.gca().set_position([0, 0, 1, 1])
