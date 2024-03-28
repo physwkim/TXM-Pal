@@ -162,6 +162,9 @@ class Main(qt.QMainWindow):
         # self.pushButtonSelectMask.clicked.connect(self.select_mask)
         self.pushButtonFitting.setCallable(self.calcPeakFitting)
         self.pushButtonConcentration.setCallable(self.calcConcentration)
+        self.pushButtonConcentration.setCallable(self.calcConcentration)
+        self.pushButtonConcentrationPlus.setCallable(self.calcConcentrationPlus)
+        self.pushButtonConcentrationMinus.setCallable(self.calcConcentrationMinus)
 
         self.pushButtonSaving.clicked.connect(self.saveData)
 
@@ -456,6 +459,138 @@ class Main(qt.QMainWindow):
         self.toLog("Calculating concentration...")
         startE = self.doubleSpinBoxStartE.value()
         stopE = self.doubleSpinBoxStopE.value()
+        conc = (self.peak_image - startE) / (stopE - startE)
+        thickness_img = self.thickness_image.copy()
+
+        negative_mask = np.logical_and(conc<0 , np.logical_not(np.isnan(conc)))
+        ceil_mask = np.logical_and(conc>1.0, np.logical_not(np.isnan(conc)))
+
+        conc[negative_mask] = 0
+        conc[ceil_mask] = 1
+
+        shape = conc.shape
+
+        # Fill H, S, V channels
+        hsv = np.zeros((shape[0], shape[1], 3))
+        hsv[:, :, 0] = conc * (1/3)
+        hsv[:, :, 1] = np.ones_like(conc)
+
+        slider_value = self.horizontalSliderAdj.value()
+        if slider_value == 100:
+            # use the maximum thickness as it is
+            max_value = np.nanmax(thickness_img)
+        else:
+            # Calculate the new maximum value based on the slider's value
+            max_value = np.nanmax(thickness_img) * (slider_value / 100.0)
+
+        # Adjust the image's maximum value
+        adjusted_img = np.minimum(thickness_img, max_value)
+
+        # Normalize the image
+        normalized_img = adjusted_img / max_value
+
+        hsv[:, :, 2] = normalized_img
+
+        # Convert HSV to RGB
+        rgb = hsv_to_rgb(hsv)
+
+        # Remove Unmasked Pixels
+        rgb[:,:,0][np.where(np.isnan(conc))] = 0
+        rgb[:,:,1][np.where(np.isnan(conc))] = 0
+        rgb[:,:,2][np.where(np.isnan(conc))] = 0
+
+        # Clip RGB values
+        rgb = np.clip(rgb, 0, 1)
+        self.concentration_image = rgb
+
+        plot = self.widgetImageStack.getPlotWidget()
+        _submit(plot.addImage, self.concentration_image)
+        title = f"{self.basename}, mean : {self.peak_energy_mean:.3f}, std : {self.peak_energy_std:.3f}\nstartE : {startE:.2f}, stopE : {stopE:.2f}, size : {self.concentration_image.shape[1]} x {self.concentration_image.shape[0]}"
+        _submit(plot.setGraphTitle, title)
+        self.toLog("Calculating concentration... done")
+
+    def calcConcentrationPlus(self):
+        self.toLog("Calculating concentration...")
+        centerE = self.doubleSpinBoxCenterE.value()
+        stepE = self.doubleSpinBoxStepE.value()
+        plusE = self.doubleSpinBoxPlusE.value()
+        minusE = self.doubleSpinBoxMinusE.value()
+
+        newMinusE = minusE - stepE
+        newPlusE = plusE + stepE
+
+        _submit(self.doubleSpinBoxPlusE.setValue, newPlusE)
+        _submit(self.doubleSpinBoxMinusE.setValue, newMinusE)
+
+        startE = centerE + newMinusE
+        stopE = centerE + newPlusE
+
+        conc = (self.peak_image - startE) / (stopE - startE)
+        thickness_img = self.thickness_image.copy()
+
+        negative_mask = np.logical_and(conc<0 , np.logical_not(np.isnan(conc)))
+        ceil_mask = np.logical_and(conc>1.0, np.logical_not(np.isnan(conc)))
+
+        conc[negative_mask] = 0
+        conc[ceil_mask] = 1
+
+        shape = conc.shape
+
+        # Fill H, S, V channels
+        hsv = np.zeros((shape[0], shape[1], 3))
+        hsv[:, :, 0] = conc * (1/3)
+        hsv[:, :, 1] = np.ones_like(conc)
+
+        slider_value = self.horizontalSliderAdj.value()
+        if slider_value == 100:
+            # use the maximum thickness as it is
+            max_value = np.nanmax(thickness_img)
+        else:
+            # Calculate the new maximum value based on the slider's value
+            max_value = np.nanmax(thickness_img) * (slider_value / 100.0)
+
+        # Adjust the image's maximum value
+        adjusted_img = np.minimum(thickness_img, max_value)
+
+        # Normalize the image
+        normalized_img = adjusted_img / max_value
+
+        hsv[:, :, 2] = normalized_img
+
+        # Convert HSV to RGB
+        rgb = hsv_to_rgb(hsv)
+
+        # Remove Unmasked Pixels
+        rgb[:,:,0][np.where(np.isnan(conc))] = 0
+        rgb[:,:,1][np.where(np.isnan(conc))] = 0
+        rgb[:,:,2][np.where(np.isnan(conc))] = 0
+
+        # Clip RGB values
+        rgb = np.clip(rgb, 0, 1)
+        self.concentration_image = rgb
+
+        plot = self.widgetImageStack.getPlotWidget()
+        _submit(plot.addImage, self.concentration_image)
+        title = f"{self.basename}, mean : {self.peak_energy_mean:.3f}, std : {self.peak_energy_std:.3f}\nstartE : {startE:.2f}, stopE : {stopE:.2f}, size : {self.concentration_image.shape[1]} x {self.concentration_image.shape[0]}"
+        _submit(plot.setGraphTitle, title)
+        self.toLog("Calculating concentration... done")
+
+    def calcConcentrationMinus(self):
+        self.toLog("Calculating concentration...")
+        centerE = self.doubleSpinBoxCenterE.value()
+        stepE = self.doubleSpinBoxStepE.value()
+        plusE = self.doubleSpinBoxPlusE.value()
+        minusE = self.doubleSpinBoxMinusE.value()
+
+        newMinusE = minusE + stepE
+        newPlusE = plusE - stepE
+
+        _submit(self.doubleSpinBoxPlusE.setValue, newPlusE)
+        _submit(self.doubleSpinBoxMinusE.setValue, newMinusE)
+
+        startE = centerE + newMinusE
+        stopE = centerE + newPlusE
+
         conc = (self.peak_image - startE) / (stopE - startE)
         thickness_img = self.thickness_image.copy()
 
