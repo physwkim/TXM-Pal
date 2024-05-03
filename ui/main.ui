@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1472</width>
-    <height>790</height>
+    <height>1018</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -43,9 +43,9 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>-2</y>
+             <y>0</y>
              <width>968</width>
-             <height>998</height>
+             <height>1102</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_53">
@@ -911,10 +911,10 @@
                    <item>
                     <widget class="QFrame" name="frame_5">
                      <property name="frameShape">
-                      <enum>QFrame::StyledPanel</enum>
+                      <enum>QFrame::NoFrame</enum>
                      </property>
                      <property name="frameShadow">
-                      <enum>QFrame::Raised</enum>
+                      <enum>QFrame::Plain</enum>
                      </property>
                      <layout class="QGridLayout" name="gridLayout">
                       <item row="0" column="1">
@@ -1697,6 +1697,42 @@
                      </layout>
                     </widget>
                    </item>
+                   <item>
+                    <widget class="QGroupBox" name="groupBoxColormap">
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>100</height>
+                      </size>
+                     </property>
+                     <property name="title">
+                      <string>Custom Colormap</string>
+                     </property>
+                     <property name="checkable">
+                      <bool>true</bool>
+                     </property>
+                     <property name="checked">
+                      <bool>false</bool>
+                     </property>
+                     <layout class="QVBoxLayout" name="verticalLayout">
+                      <property name="leftMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>0</number>
+                      </property>
+                      <item>
+                       <widget class="ColorBarWidget" name="widgetColormap" native="true"/>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
                   </layout>
                  </widget>
                 </item>
@@ -1892,6 +1928,12 @@
    <class>Plot1DHistogram</class>
    <extends>QWidget</extends>
    <header>plot1D.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ColorBarWidget</class>
+   <extends>QWidget</extends>
+   <header>colorbar.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

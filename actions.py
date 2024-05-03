@@ -14,6 +14,7 @@ from silx.gui.utils.image import convertArrayToQImage
 import matplotlib.pyplot as plt
 
 DPI=300
+FACECOLOR = 'black'
 
 class CopyAction(PlotAction):
     """QAction to copy :class: '.PlotWidget' content to clipboard.
@@ -39,27 +40,31 @@ class CopyAction(PlotAction):
             colormap = colorbar.getColormap()
 
             pngFile = BytesIO()
-            plt.figure(figsize=(10, 10), dpi=DPI)
+            fig, ax = plt.subplots(figsize=(10, 10), dpi=DPI)
+            ax.set_facecolor(FACECOLOR)
 
             if colormap is not None:
                 vmin = colormap.getVMin()
                 vmax = colormap.getVMax()
                 cm_name = colormap.getName()
-                plt.imshow(data,
-                           origin='lower',
-                           cmap=cm_name,
-                           vmin=vmin,
-                           vmax=vmax,
-                           interpolation='none',
-                           interpolation_stage='rgba')
+                ax.imshow(data,
+                          origin='lower',
+                          cmap=cm_name,
+                          vmin=vmin,
+                          vmax=vmax,
+                          interpolation='none',
+                          interpolation_stage='rgba')
             else:
-                plt.imshow(data,
-                           origin='lower',
-                           interpolation='none',
-                           interpolation_stage='rgba')
+                ax.imshow(data,
+                          origin='lower',
+                          interpolation='none',
+                          interpolation_stage='rgba')
 
-            plt.title(title, fontdict={'fontsize': 30})
-            plt.savefig(pngFile, format='png', bbox_inches='tight', dpi=DPI)
+            ax.set_title(title, fontdict={'fontsize': 30})
+            plt.savefig(pngFile,
+                        format='png',
+                        bbox_inches='tight',
+                        dpi=DPI)
 
             pngFile.flush()
             pngFile.seek(0)
@@ -121,28 +126,35 @@ class SaveAction(_SaveAction):
             colormap = colorbar.getColormap()
 
             pngFile = BytesIO()
-            plt.figure(figsize=(10, 10), dpi=DPI)
+            fig, ax = plt.subplots(figsize=(10, 10), dpi=DPI)
+            ax.set_facecolor(FACECOLOR)
 
             if colormap is not None:
                 vmin = colormap.getVMin()
                 vmax = colormap.getVMax()
                 cm_name = colormap.getName()
-                plt.imshow(data,
-                           origin='lower',
-                           cmap=cm_name,
-                           vmin=vmin,
-                           vmax=vmax,
-                           interpolation='none',
-                           interpolation_stage='rgba')
+                ax.imshow(data,
+                          origin='lower',
+                          cmap=cm_name,
+                          vmin=vmin,
+                          vmax=vmax,
+                          interpolation='none',
+                          interpolation_stage='rgba')
             else:
-                plt.imshow(data,
-                           origin='lower',
-                           interpolation='none',
-                           interpolation_stage='rgba')
+                ax.imshow(data,
+                          origin='lower',
+                          interpolation='none',
+                          interpolation_stage='rgba')
 
-            plt.axis('off')
-            plt.gca().set_position([0, 0, 1, 1])
-            plt.savefig(filename, format='png', bbox_inches='tight', pad_inches=0, dpi=DPI)
+            ax.axis('off')
+            ax.set_position([0, 0, 1, 1])
+            fig.set_facecolor(FACECOLOR)
+
+            plt.savefig(filename,
+                        format='png',
+                        bbox_inches='tight',
+                        pad_inches=0,
+                        dpi=DPI)
 
         except Exception as e:
             qt.QMessageBox.critical(
