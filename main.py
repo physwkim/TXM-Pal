@@ -168,6 +168,9 @@ class Main(qt.QMainWindow):
 
         self.pushButtonSaving.clicked.connect(self.saveData)
 
+        # Interpolation option
+        self.comboBoxInterpolate.currentIndexChanged.connect(self.updateInterpolate)
+
         # Fitting algorithm selection
         self.comboBoxSmoothAlgorithm.currentTextChanged.connect(self.updateSmoothAlgorithm)
 
@@ -186,6 +189,11 @@ class Main(qt.QMainWindow):
         # Set window icon
         icon_path = os.path.join(application_path, 'mainicon.ico')
         self.setWindowIcon(qt.QIcon(icon_path))
+
+    def updateInterpolate(self, idx):
+        qsettings = qt.QSettings('settings.ini', qt.QSettings.IniFormat)
+        qsettings.setValue('interpolate', idx)
+        qsettings.sync()
 
     def doAuto(self):
         filtering = self.checkBoxAutoFilter.isChecked()

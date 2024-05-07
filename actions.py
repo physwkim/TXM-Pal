@@ -13,7 +13,6 @@ from silx.gui.utils.image import convertArrayToQImage
 
 import matplotlib.pyplot as plt
 
-DPI=300
 FACECOLOR = 'black'
 
 class CopyAction(PlotAction):
@@ -40,31 +39,42 @@ class CopyAction(PlotAction):
             colormap = colorbar.getColormap()
 
             pngFile = BytesIO()
-            fig, ax = plt.subplots(figsize=(10, 10), dpi=DPI)
+            fig, ax = plt.subplots(figsize=(10, 10))
             ax.set_facecolor(FACECOLOR)
+
+            qsettings = qt.QSettings('settings.ini', qt.QSettings.IniFormat)
+            interp = qsettings.value('interpolate', 0)
+            print(f"Interpolation: {interp}, Bool : {interp == 1}")
+            interp_algo = 'antialiased' if interp else 'none'
+            interp_stage = 'data' if interp else 'rgba'
+
 
             if colormap is not None:
                 vmin = colormap.getVMin()
                 vmax = colormap.getVMax()
                 cm_name = colormap.getName()
+
+
                 ax.imshow(data,
-                          origin='lower',
-                          cmap=cm_name,
-                          vmin=vmin,
-                          vmax=vmax,
-                          interpolation='none',
-                          interpolation_stage='rgba')
+                        origin='lower',
+                        cmap=cm_name,
+                        vmin=vmin,
+                        vmax=vmax,
+                        interpolation=interp_algo,
+                        interpolation_stage=interp_stage)
+
             else:
                 ax.imshow(data,
-                          origin='lower',
-                          interpolation='none',
-                          interpolation_stage='rgba')
+                        origin='lower',
+                        interpolation=interp_algo,
+                        interpolation_stage=interp_stage)
+
+
 
             ax.set_title(title, fontdict={'fontsize': 30})
             plt.savefig(pngFile,
                         format='png',
-                        bbox_inches='tight',
-                        dpi=DPI)
+                        bbox_inches='tight')
 
             pngFile.flush()
             pngFile.seek(0)
@@ -126,25 +136,32 @@ class SaveAction(_SaveAction):
             colormap = colorbar.getColormap()
 
             pngFile = BytesIO()
-            fig, ax = plt.subplots(figsize=(10, 10), dpi=DPI)
+            fig, ax = plt.subplots(figsize=(10, 10))
             ax.set_facecolor(FACECOLOR)
+
+            qsettings = qt.QSettings('settings.ini', qt.QSettings.IniFormat)
+            interp = qsettings.value('interpolate', 0)
+            print(f"Interpolation: {interp}, Bool : {interp == 1}")
+            interp_algo = 'antialiased' if interp else 'none'
+            interp_stage = 'data' if interp else 'rgba'
 
             if colormap is not None:
                 vmin = colormap.getVMin()
                 vmax = colormap.getVMax()
                 cm_name = colormap.getName()
+
                 ax.imshow(data,
-                          origin='lower',
-                          cmap=cm_name,
-                          vmin=vmin,
-                          vmax=vmax,
-                          interpolation='none',
-                          interpolation_stage='rgba')
+                        origin='lower',
+                        cmap=cm_name,
+                        vmin=vmin,
+                        vmax=vmax,
+                        interpolation=interp_algo,
+                        interpolation_stage=interp_stage)
             else:
                 ax.imshow(data,
-                          origin='lower',
-                          interpolation='none',
-                          interpolation_stage='rgba')
+                        origin='lower',
+                        interpolation=interp_algo,
+                        interpolation_stage=interp_stage)
 
             ax.axis('off')
             ax.set_position([0, 0, 1, 1])
@@ -153,8 +170,7 @@ class SaveAction(_SaveAction):
             plt.savefig(filename,
                         format='png',
                         bbox_inches='tight',
-                        pad_inches=0,
-                        dpi=DPI)
+                        pad_inches=0)
 
         except Exception as e:
             qt.QMessageBox.critical(
