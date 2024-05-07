@@ -73,6 +73,7 @@ class Main(qt.QMainWindow):
         self.selected_path_h5 = ""
         self.event_queue = []
         self.processing = False
+        self.crop_info = {}
 
         qt.loadUi(ui_path, self)
 
@@ -449,6 +450,11 @@ class Main(qt.QMainWindow):
                 entry_1.create_dataset("absorbance", data=self._preprocessImage)
                 entry_1.create_dataset("projection", data=self.projImage)
                 entry_1.create_dataset("background", data=self.backImage)
+                entry_1.create_dataset("crop_xstart", data=self.crop_info.get("xStart", 0))
+                entry_1.create_dataset("crop_xstop", data=self.crop_info.get("xStop", 0))
+                entry_1.create_dataset("crop_ystart", data=self.crop_info.get("yStart", 0))
+                entry_1.create_dataset("crop_ystop", data=self.crop_info.get("yStop", 0))
+
                 # entry_1.create_dataset("thickness", data=self.thickness_image)
                 # entry_1.create_dataset("concentration", data=self.concentration_image)
                 # entry_1.create_dataset("peak", data=self.peak_image)
@@ -625,7 +631,7 @@ class Main(qt.QMainWindow):
                 energy_diff = self.doubleSpinBoxEnergyDifference.value()
                 num_pixel = self.doubleSpinBoxNumPixel.value()
                 slope = energy_diff / num_pixel
-                index_array = np.arange(shape[0])
+                index_array = np.arange(shape[0]) + self.crop_info.get("yStart", 0)
                 shifted_peak_image = self.peak_image.copy() - slope * index_array[:, None]
                 self.peak_image = shifted_peak_image
                 nrj = np.array(self.energy_list, dtype=np.float64)
@@ -680,6 +686,10 @@ class Main(qt.QMainWindow):
         xStop = self.spinBoxXStop.value()
         yStart = self.spinBoxYStart.value()
         yStop = self.spinBoxYStop.value()
+        self.crop_info = {"xStart": xStart,
+                          "xStop": xStop,
+                          "yStart": yStart,
+                          "yStop": yStop}
 
         self.absorbanceImage = self.absorbanceImage[:, yStart:yStop, xStart:xStop]
         self._preprocessImage = self.absorbanceImage.copy()
@@ -829,6 +839,11 @@ class Main(qt.QMainWindow):
                     else:
                         imgStack = self.projImage
 
+                    self.crop_info = {"xStart": entry_1["crop_xstart"][()],
+                                      "xStop": entry_1["crop_xstop"][()],
+                                      "yStart": entry_1["crop_ystart"][()],
+                                      "yStop": entry_1["crop_ystop"][()]}
+
                     _submit(self.widgetImageStack.setStack, imgStack)
                     _submit(self.widgetImageStack.resetZoom)
                     _submit(self.widgetImageStack.setCurrentIndex, self.middle_index)
@@ -845,6 +860,8 @@ class Main(qt.QMainWindow):
     def load(self):
         self.energy_list = []
         self.image_stack = []
+
+        self.crop_info = {}
 
         if os.path.exists(self.selected_path):
             if self.selected_path.endswith("_proj") or self.selected_path.endswith("_back"):
