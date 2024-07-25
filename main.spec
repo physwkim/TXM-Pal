@@ -14,7 +14,7 @@ icon_path = os.path.join(PROJECT_PATH, "mainicon.ico")
 block_cipher = None
 
 a = Analysis(['main.py'],
-             pathex=['C:\\codes\\palxanes'],
+             pathex=['C:\\codes\\TXM-Pal'],
              binaries=[],
              datas=datas,
 			 hiddenimports=['silx', 'plot1D', 'plot2D', 'Profile', 'actions', 'colorbar', 'StackView', 'widgets','silx.gui.widgets.ThreadPoolPushButton', 'fabio.fabioimage', 'fabio.utils', 'fabio.file_series', 'fabio.openimage', 'fabio.adscimage', 'fabio.binaryimage', 'fabio.bruker100image', 'fabio.brukerimage', 'fabio.cbfimage', 'fabio.dm3image', 'fabio.edfimage', 'fabio.eigerimage', 'fabio.fit2dimage', 'fabio.fit2dmaskimage', 'fabio.fit2dspreadsheetimage', 'fabio.GEimage', 'fabio.hdf5image', 'fabio.HiPiCimage', 'fabio.kcdimage', 'fabio.mar345image','fabio.mrcimage','fabio.marccdimage','fabio.numpyimage','fabio.OXDimage', 'fabio.pilatusimage','fabio.pixiimage', 'fabio.pnmimage', 'fabio.raxisimage', 'fabio.tifimage','fabio.xsdimage', 'fabio.compression','fabio.converters', 'fabio.datIO', 'fabio.TiffIO', 'fabio.readbytestream', 'fabio.mpaimage'],
