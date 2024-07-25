@@ -17,7 +17,7 @@
     - conda activate txm-pal
 6) Install rust library (On windows)
     - cd wheels
-    - pip install lmfitrs-0.1.6-cp312-none-win_amd64.whl
+    - pip install TXM-Pal-core-0.1.6-cp312-none-win_amd64.whl
     - cd ..
 11) Run main.py
     - python main.py

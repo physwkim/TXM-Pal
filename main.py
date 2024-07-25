@@ -25,7 +25,7 @@ import h5py
 # from utils import fitPeak
 from utils import magnification_corr_factors, find_nearest
 
-from lmfitrs import quadfit_mc, gaussianfit_mc, phase_cross_correlation_stack, renormalize_absorbance_stack
+from txm_pal_core import quadfit_mc, gaussianfit_mc, phase_cross_correlation_stack, renormalize_absorbance_stack
 from roiTableWidget import RoiTableWidget
 from widgets import MainToolBar
 
@@ -77,7 +77,7 @@ class Main(qt.QMainWindow):
 
         qt.loadUi(ui_path, self)
 
-        self.setWindowTitle("PAL XANES")
+        self.setWindowTitle("TXM-Pal")
         self.widgetImageStack.getPlotWidget().setDataBackgroundColor([0,0,0])
 
         # Setup toolbar
