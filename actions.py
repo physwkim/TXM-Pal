@@ -1,4 +1,5 @@
 
+from collections import OrderedDict
 from io import BytesIO
 
 import numpy
@@ -98,15 +99,23 @@ class SaveAction(_SaveAction):
     :param parent: See : class:`QAction`.
 
     """
+
+    DEFAULT_ALL_FILTERS = ()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Remove filters except png
+        # Remove filters except png, tiff
         img_filters = self._filters['image']
         keys = list(img_filters.keys())
+        print(f"keys : {keys}")
 
         for key in keys:
-            if not 'png' in key:
+            if ('png' not in key) and ('tif' not in key):
                 img_filters.pop(key)
+
+        # Set png as default
+        img_filters = OrderedDict(img_filters)
+        img_filters.move_to_end('Image data as TIFF (*.tif)')
 
         self._filters['image'] = img_filters
 
@@ -127,58 +136,64 @@ class SaveAction(_SaveAction):
                 plot, "No Data", "No image to be saved")
             return False
 
-        try:
-            # Retrieve data
+        if nameFilter == self.IMAGE_FILTER_TIFF:
+            # convert to uint16
             data = image.getData(copy=False)
+            # data = numpy.array(data, dtype=numpy.uint16)
+            data = numpy.array(data, dtype=numpy.float32)
+            tifffile.imwrite(filename, data)
+            return True
 
-            # Get colormap
-            colorbar = plot.getColorBarWidget()
-            colormap = colorbar.getColormap()
+        elif nameFilter == self.IMAGE_FILTER_RGB_PNG:
+            try:
+                # Retrieve data
+                data = image.getData(copy=False)
 
-            pngFile = BytesIO()
-            fig, ax = plt.subplots(figsize=(10, 10))
-            ax.set_facecolor(FACECOLOR)
+                # Get colormap
+                colorbar = plot.getColorBarWidget()
+                colormap = colorbar.getColormap()
 
-            qsettings = qt.QSettings('settings.ini', qt.QSettings.IniFormat)
-            interp = qsettings.value('interpolate', 0)
-            print(f"Interpolation: {interp}, Bool : {interp == 1}")
-            interp_algo = 'antialiased' if interp else 'none'
-            interp_stage = 'data' if interp else 'rgba'
+                pngFile = BytesIO()
+                fig, ax = plt.subplots(figsize=(10, 10))
+                ax.set_facecolor(FACECOLOR)
 
-            if colormap is not None:
-                vmin = colormap.getVMin()
-                vmax = colormap.getVMax()
-                cm_name = colormap.getName()
+                qsettings = qt.QSettings('settings.ini', qt.QSettings.IniFormat)
+                interp = qsettings.value('interpolate', 0)
+                # print(f"Interpolation: {interp}, Bool : {interp == 1}")
+                interp_algo = 'antialiased' if interp else 'none'
+                interp_stage = 'data' if interp else 'rgba'
 
-                ax.imshow(data,
-                        origin='lower',
-                        cmap=cm_name,
-                        vmin=vmin,
-                        vmax=vmax,
-                        interpolation=interp_algo,
-                        interpolation_stage=interp_stage)
-            else:
-                ax.imshow(data,
-                        origin='lower',
-                        interpolation=interp_algo,
-                        interpolation_stage=interp_stage)
+                if colormap is not None:
+                    vmin = colormap.getVMin()
+                    vmax = colormap.getVMax()
+                    cm_name = colormap.getName()
 
-            ax.axis('off')
-            ax.set_position([0, 0, 1, 1])
-            fig.set_facecolor(FACECOLOR)
+                    ax.imshow(data,
+                            origin='lower',
+                            cmap=cm_name,
+                            vmin=vmin,
+                            vmax=vmax,
+                            interpolation=interp_algo,
+                            interpolation_stage=interp_stage)
+                else:
+                    ax.imshow(data,
+                            origin='lower',
+                            interpolation=interp_algo,
+                            interpolation_stage=interp_stage)
 
-            plt.savefig(filename,
-                        format='png',
-                        bbox_inches='tight',
-                        pad_inches=0)
+                ax.axis('off')
+                ax.set_position([0, 0, 1, 1])
+                fig.set_facecolor(FACECOLOR)
 
-        except Exception as e:
-            qt.QMessageBox.critical(
-                plot, "Error",
-                "Failed to save image: %s" % e)
-            return False
+                plt.savefig(filename,
+                            format='png',
+                            bbox_inches='tight',
+                            pad_inches=0)
 
-        return True
+            except Exception as e:
+                qt.QMessageBox.critical(
+                    plot, "Error",
+                    "Failed to save image: %s" % e)
+                return False
 
-
-
+            return True

@@ -163,7 +163,7 @@ class Plot2D(PlotWindowCustom):
     """
     sigRoiUpdated = qt.Signal(object, object)
 
-    def __init__(self, parent=None, backend='matplotlib'):
+    def __init__(self, parent=None, backend='gl'):
         super().__init__(parent=parent, backend=backend)
 
         self.fitImage = None
