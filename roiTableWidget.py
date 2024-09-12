@@ -69,6 +69,7 @@ class RoiTableWidget(qt.QWidget):
         icon = icons.getQIcon("remove")
         action = qt.QAction(icon, "Delete all ROIs", self)
         action.triggered.connect(self.roiManager.clear)
+        action.triggered.connect(lambda: self.roiTable.setRowCount(0))
         action.triggered.connect(self.sigClearRoiCurves.emit)
         self.roiToolbar.addAction(action)
 
