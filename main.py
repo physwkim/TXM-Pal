@@ -676,7 +676,7 @@ class Main(qt.QMainWindow):
             self.thickness_image = thickness
             self.widgetImageStack.setStack(self.thickness_image)
             plot = self.widgetImageStack.getPlotWidget()
-            _submit(plot.setGraphTitle, "Thickness")
+            _submit(plot.setGraphTitle, "Edge jump")
             self.toLog("Calculating thickness... done")
         else:
             self.toLog("Please load images first", "red")
