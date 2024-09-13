@@ -107,7 +107,6 @@ class SaveAction(_SaveAction):
         # Remove filters except png, tiff
         img_filters = self._filters['image']
         keys = list(img_filters.keys())
-        print(f"keys : {keys}")
 
         for key in keys:
             if ('png' not in key) and ('tif' not in key):

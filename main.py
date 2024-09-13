@@ -152,6 +152,9 @@ class Main(qt.QMainWindow):
         imgWidget = self.widgetImageStack.getPlotWidget()
         imgWidget.sigRoiUpdated.connect(self.updateRoi)
 
+        # Use button for updating ROI
+        self.pushButtonROIUpdate.clicked.connect(self.updateRoiFromValue)
+
         # Mask Tools
         self.maskToolsWidget = imgWidget.getMaskToolsDockWidget().widget()
         self.maskToolsWidget.otherToolGroup.hide()
@@ -714,6 +717,21 @@ class Main(qt.QMainWindow):
         _submit(self.spinBoxYStart.setValue, yStart)
         _submit(self.spinBoxYStop.setValue, yStop)
 
+    def updateRoiFromValue(self):
+        """Update ROI from values"""
+        xStart = self.spinBoxXStart.value()
+        xStop = self.spinBoxXStop.value()
+        yStart = self.spinBoxYStart.value()
+        yStop = self.spinBoxYStop.value()
+
+        origin = (xStart, yStart)
+        size = (abs(xStop - xStart), abs(yStop - yStart))
+
+        roi = self.widgetImageStack.getPlotWidget().getRoi()
+
+        # Set origin, size
+        _submit(roi.setOrigin, origin)
+        _submit(roi.setSize, size)
 
     def alignImages(self, notify=True):
         if self.absorbanceImage is not None:
