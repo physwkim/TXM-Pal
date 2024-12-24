@@ -31,7 +31,7 @@ from widgets import MainToolBar
 
 BASE_PATH = os.path.expanduser('~')
 
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt6 import QtWidgets, QtCore, QtGui
 
 if os.name == 'nt':
     # Enable highdpi scaling
@@ -376,7 +376,9 @@ class Main(qt.QMainWindow):
 
     def toggleROI(self, state):
         plot = self.widgetImageStack.getPlotWidget()
-        if state == qt.Qt.Checked:
+        roi = plot.getRoi()
+
+        if state == 2:
             xLimits = plot.getGraphXLimits()
             yLimits = plot.getGraphYLimits()
 
@@ -397,10 +399,10 @@ class Main(qt.QMainWindow):
             roi = plot.getRoi()
             _submit(roi.setOrigin, origin)
             _submit(roi.setSize, size)
-            _submit(plot.toggleROI, True)
+            _submit(roi.setVisible, True)
 
         else:
-            _submit(plot.toggleROI, False)
+            _submit(roi.setVisible, False)
 
     def magnificationCorrection(self):
         if self.absorbanceImage is not None:
@@ -730,6 +732,7 @@ class Main(qt.QMainWindow):
         roi = self.widgetImageStack.getPlotWidget().getRoi()
 
         # Set origin, size
+        _submit(roi.setVisible, True)
         _submit(roi.setOrigin, origin)
         _submit(roi.setSize, size)
 
@@ -1112,7 +1115,8 @@ class Main(qt.QMainWindow):
 
 if __name__ == '__main__':
     app = qt.QApplication(sys.argv)
+    app.setStyle('fusion')
     main = Main()
     main.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
