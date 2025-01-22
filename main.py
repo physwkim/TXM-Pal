@@ -33,14 +33,6 @@ BASE_PATH = os.path.expanduser('~')
 
 from PySide6 import QtWidgets, QtCore
 
-os.environ["QT_QPA_PLATFORMTHEME"] = "gtk3"
-
-if os.name == 'nt':
-    # Enable highdpi scaling
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
-    # Use highdpi icons
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
-
 if getattr(sys, 'frozen', False):
     # in exe file
     application_path = sys._MEIPASS
@@ -1161,6 +1153,24 @@ class Main(qt.QMainWindow):
 if __name__ == '__main__':
     app = qt.QApplication(sys.argv)
     app.setStyle('fusion')
+
+    light_palette = qt.QPalette()
+
+    light_palette.setColor(qt.QPalette.Window, qt.QColor(255, 255, 255))  # 창 배경
+    light_palette.setColor(qt.QPalette.WindowText, qt.QColor(0, 0, 0))   # 텍스트
+    light_palette.setColor(qt.QPalette.Base, qt.QColor(255, 255, 255))   # 입력 필드 배경
+    light_palette.setColor(qt.QPalette.AlternateBase, qt.QColor(240, 240, 240))
+    light_palette.setColor(qt.QPalette.ToolTipBase, qt.QColor(255, 255, 255))
+    light_palette.setColor(qt.QPalette.ToolTipText, qt.QColor(0, 0, 0))
+    light_palette.setColor(qt.QPalette.Text, qt.QColor(0, 0, 0))         # 일반 텍스트
+    light_palette.setColor(qt.QPalette.Button, qt.QColor(240, 240, 240)) # 버튼 배경
+    light_palette.setColor(qt.QPalette.ButtonText, qt.QColor(0, 0, 0))   # 버튼 텍스트
+    light_palette.setColor(qt.QPalette.BrightText, qt.QColor(255, 0, 0)) # 강조 텍스트
+    light_palette.setColor(qt.QPalette.Highlight, qt.QColor(0, 120, 215))  # 강조 색상
+    light_palette.setColor(qt.QPalette.HighlightedText, qt.QColor(255, 255, 255))
+
+    app.setPalette(light_palette)
+
     main = Main()
     main.show()
     sys.exit(app.exec())
