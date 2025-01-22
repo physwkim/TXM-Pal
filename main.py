@@ -31,7 +31,9 @@ from widgets import MainToolBar
 
 BASE_PATH = os.path.expanduser('~')
 
-from PyQt6 import QtWidgets, QtCore, QtGui
+from PySide6 import QtWidgets, QtCore
+
+os.environ["QT_QPA_PLATFORMTHEME"] = "gtk3"
 
 if os.name == 'nt':
     # Enable highdpi scaling
@@ -109,6 +111,7 @@ class Main(qt.QMainWindow):
         self.widgetPlotHistogram.setAxesMargins(0.12, 0.05, 0.05, 0.15)
 
         self.pushButtonHistogram.setCallable(self.plotHistogram)
+        self.pushButtonHistogramSub.setCallable(self.plotHistogramSub)
 
         # Datafile selection
         self.pushButtonSelectPath.clicked.connect(self.select_load_path)
@@ -265,6 +268,48 @@ class Main(qt.QMainWindow):
                             density=True)
         self.histogram = hist
         _submit(self.widgetPlotHistogram.addHistogram, hist[0], hist[1])
+
+        # Update title
+        peak_energy_mean = np.nanmean(data)
+        peak_energy_std = np.nanstd(data)
+
+        plot = self.widgetImageStack.getPlotWidget()
+
+        title = f"{self.basename}, mean : {peak_energy_mean:.3f}, std : {peak_energy_std:.3f}\nstartE : {energyStart:.2f}, stopE : {energyStop:.2f}, size : {data.shape[1]} x {data.shape[0]}"
+        _submit(plot.setGraphTitle, title)
+
+    def plotHistogramSub(self):
+        """ Update histogram for zoom dataset on the graph """
+        refEnergy = self.doubleSpinBoxRefEnergy.value()
+        energyRange = self.doubleSpinBoxEnergyRange.value()
+        energyStep = self.doubleSpinBoxEnergyStep.value()
+        energyStart = refEnergy - energyRange
+        energyStop = refEnergy + energyRange
+        numBins = int(energyRange*2/energyStep)
+
+        plot = self.widgetImageStack.getPlotWidget()
+        data = self.peak_image.copy()
+        xLimits = plot.getGraphXLimits()
+        yLimits = plot.getGraphYLimits()
+
+        xL = np.round([max(xLimits[0], 0), min(xLimits[1], data.shape[1])], 0).astype(int)
+        yL = np.round([max(yLimits[0], 0), min(yLimits[1], data.shape[0])], 0).astype(int)
+
+        subData = data[yL[0]:yL[1], xL[0]:xL[1]]
+
+        peak_energy_mean = np.nanmean(subData)
+        peak_energy_std = np.nanstd(subData)
+
+        hist = np.histogram(subData,
+                            bins=numBins,
+                            range=(energyStart, energyStop),
+                            density=True)
+        self.histogram = hist
+        _submit(self.widgetPlotHistogram.addHistogram, hist[0], hist[1])
+
+        # Update title
+        title = f"{self.basename}, mean : {peak_energy_mean:.3f}, std : {peak_energy_std:.3f}\nstartE : {energyStart:.2f}, stopE : {energyStop:.2f}, size : {subData.shape[1]} x {subData.shape[0]}"
+        _submit(plot.setGraphTitle, title)
 
     def getSpectrum(self, roi):
         """Get spectrum from ROI"""
@@ -460,13 +505,13 @@ class Main(qt.QMainWindow):
                 entry_1.create_dataset("crop_ystart", data=self.crop_info.get("yStart", 0))
                 entry_1.create_dataset("crop_ystop", data=self.crop_info.get("yStop", 0))
 
-                # entry_1.create_dataset("thickness", data=self.thickness_image)
-                # entry_1.create_dataset("concentration", data=self.concentration_image)
-                # entry_1.create_dataset("peak", data=self.peak_image)
-                # entry_1.create_dataset("peak_energy_mean", data=self.peak_energy_mean)
-                # entry_1.create_dataset("peak_energy_std", data=self.peak_energy_std)
-                # entry_1.create_dataset("histogram_bins", data=self.histogram[1])
-                # entry_1.create_dataset("histogram_count", data=self.histogram[0])
+                entry_1.create_dataset("thickness", data=self.thickness_image)
+                entry_1.create_dataset("concentration", data=self.concentration_image)
+                entry_1.create_dataset("peak", data=self.peak_image)
+                entry_1.create_dataset("peak_energy_mean", data=self.peak_energy_mean)
+                entry_1.create_dataset("peak_energy_std", data=self.peak_energy_std)
+                entry_1.create_dataset("histogram_bins", data=self.histogram[1])
+                entry_1.create_dataset("histogram_count", data=self.histogram[0])
 
         except Exception as e:
             self.toLog(f"Error : {e}")

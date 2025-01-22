@@ -18,7 +18,7 @@
     <item>
      <widget class="QSplitter" name="mainSplitter">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
       <widget class="QFrame" name="frame">
        <property name="maximumSize">
@@ -28,10 +28,10 @@
         </size>
        </property>
        <property name="frameShape">
-        <enum>QFrame::NoFrame</enum>
+        <enum>QFrame::Shape::NoFrame</enum>
        </property>
        <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
+        <enum>QFrame::Shadow::Plain</enum>
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout_82">
         <item>
@@ -44,8 +44,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1019</width>
-             <height>1182</height>
+             <width>1000</width>
+             <height>1246</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_53">
@@ -253,7 +253,7 @@
                    <item>
                     <spacer name="horizontalSpacer_3">
                      <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
+                      <enum>Qt::Orientation::Horizontal</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -335,7 +335,7 @@
                    <item>
                     <spacer name="horizontalSpacer_2">
                      <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
+                      <enum>Qt::Orientation::Horizontal</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -384,7 +384,7 @@
                    <item>
                     <spacer name="horizontalSpacer_7">
                      <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
+                      <enum>Qt::Orientation::Horizontal</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -431,10 +431,10 @@
                    <item>
                     <widget class="QFrame" name="frame_2">
                      <property name="frameShape">
-                      <enum>QFrame::NoFrame</enum>
+                      <enum>QFrame::Shape::NoFrame</enum>
                      </property>
                      <property name="frameShadow">
-                      <enum>QFrame::Plain</enum>
+                      <enum>QFrame::Shadow::Plain</enum>
                      </property>
                      <layout class="QHBoxLayout" name="horizontalLayout_7">
                       <property name="leftMargin">
@@ -468,7 +468,7 @@
                       <item>
                        <spacer name="horizontalSpacer_5">
                         <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
+                         <enum>Qt::Orientation::Horizontal</enum>
                         </property>
                         <property name="sizeHint" stdset="0">
                          <size>
@@ -501,7 +501,7 @@
                       <item>
                        <spacer name="horizontalSpacer_6">
                         <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
+                         <enum>Qt::Orientation::Horizontal</enum>
                         </property>
                         <property name="sizeHint" stdset="0">
                          <size>
@@ -534,7 +534,7 @@
                       <item>
                        <spacer name="horizontalSpacer_8">
                         <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
+                         <enum>Qt::Orientation::Horizontal</enum>
                         </property>
                         <property name="sizeHint" stdset="0">
                          <size>
@@ -626,7 +626,7 @@
                    <item>
                     <spacer name="horizontalSpacer_18">
                      <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
+                      <enum>Qt::Orientation::Horizontal</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -653,60 +653,9 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QGroupBox" name="groupBox_85">
-                  <property name="title">
-                   <string>Saving</string>
-                  </property>
-                  <layout class="QHBoxLayout" name="horizontalLayout_83">
-                   <item>
-                    <widget class="QLineEdit" name="lineEditSavePath">
-                     <property name="minimumSize">
-                      <size>
-                       <width>0</width>
-                       <height>30</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="pushButtonSelectSavePath">
-                     <property name="minimumSize">
-                      <size>
-                       <width>0</width>
-                       <height>30</height>
-                      </size>
-                     </property>
-                     <property name="text">
-                      <string>Select Path</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="ThreadPoolPushButton" name="pushButtonSaving">
-                     <property name="minimumSize">
-                      <size>
-                       <width>0</width>
-                       <height>30</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>80</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                     <property name="text">
-                      <string>Save</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                </item>
-                <item>
                  <spacer name="verticalSpacer_2">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -803,7 +752,7 @@
                    <item>
                     <spacer name="horizontalSpacer_4">
                      <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
+                      <enum>Qt::Orientation::Horizontal</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -833,7 +782,7 @@
                    <item>
                     <spacer name="horizontalSpacer_9">
                      <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
+                      <enum>Qt::Orientation::Horizontal</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -886,10 +835,10 @@
                    <item>
                     <widget class="QFrame" name="frameMask">
                      <property name="frameShape">
-                      <enum>QFrame::NoFrame</enum>
+                      <enum>QFrame::Shape::NoFrame</enum>
                      </property>
                      <property name="frameShadow">
-                      <enum>QFrame::Plain</enum>
+                      <enum>QFrame::Shadow::Plain</enum>
                      </property>
                      <layout class="QHBoxLayout" name="horizontalLayout_13">
                       <property name="spacing">
@@ -913,10 +862,10 @@
                    <item>
                     <widget class="QFrame" name="frame_5">
                      <property name="frameShape">
-                      <enum>QFrame::NoFrame</enum>
+                      <enum>QFrame::Shape::NoFrame</enum>
                      </property>
                      <property name="frameShadow">
-                      <enum>QFrame::Plain</enum>
+                      <enum>QFrame::Shadow::Plain</enum>
                      </property>
                      <layout class="QGridLayout" name="gridLayout">
                       <item row="0" column="1">
@@ -1113,10 +1062,10 @@
                    <item>
                     <widget class="QFrame" name="frame_3">
                      <property name="frameShape">
-                      <enum>QFrame::NoFrame</enum>
+                      <enum>QFrame::Shape::NoFrame</enum>
                      </property>
                      <property name="frameShadow">
-                      <enum>QFrame::Plain</enum>
+                      <enum>QFrame::Shadow::Plain</enum>
                      </property>
                      <layout class="QHBoxLayout" name="horizontalLayout_12">
                       <item>
@@ -1149,7 +1098,7 @@
                       <item>
                        <spacer name="horizontalSpacer_15">
                         <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
+                         <enum>Qt::Orientation::Horizontal</enum>
                         </property>
                         <property name="sizeHint" stdset="0">
                          <size>
@@ -1196,7 +1145,7 @@
                       <item>
                        <spacer name="horizontalSpacer_12">
                         <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
+                         <enum>Qt::Orientation::Horizontal</enum>
                         </property>
                         <property name="sizeHint" stdset="0">
                          <size>
@@ -1252,10 +1201,10 @@
                    <item>
                     <widget class="QFrame" name="frame_4">
                      <property name="frameShape">
-                      <enum>QFrame::NoFrame</enum>
+                      <enum>QFrame::Shape::NoFrame</enum>
                      </property>
                      <property name="frameShadow">
-                      <enum>QFrame::Plain</enum>
+                      <enum>QFrame::Shadow::Plain</enum>
                      </property>
                      <layout class="QHBoxLayout" name="horizontalLayout_8">
                       <property name="leftMargin">
@@ -1270,19 +1219,6 @@
                       <property name="bottomMargin">
                        <number>0</number>
                       </property>
-                      <item>
-                       <widget class="ThreadPoolPushButton" name="pushButtonHistogram_2">
-                        <property name="maximumSize">
-                         <size>
-                          <width>80</width>
-                          <height>16777215</height>
-                         </size>
-                        </property>
-                        <property name="text">
-                         <string>Calculate</string>
-                        </property>
-                       </widget>
-                      </item>
                       <item>
                        <widget class="QLabel" name="label_15">
                         <property name="text">
@@ -1349,7 +1285,7 @@
                       <item>
                        <spacer name="horizontalSpacer_10">
                         <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
+                         <enum>Qt::Orientation::Horizontal</enum>
                         </property>
                         <property name="sizeHint" stdset="0">
                          <size>
@@ -1422,10 +1358,10 @@
                    <item>
                     <widget class="QFrame" name="frame_6">
                      <property name="frameShape">
-                      <enum>QFrame::NoFrame</enum>
+                      <enum>QFrame::Shape::NoFrame</enum>
                      </property>
                      <property name="frameShadow">
-                      <enum>QFrame::Plain</enum>
+                      <enum>QFrame::Shadow::Plain</enum>
                      </property>
                      <layout class="QHBoxLayout" name="horizontalLayout_15">
                       <item>
@@ -1471,7 +1407,7 @@
                       <item>
                        <spacer name="horizontalSpacer_16">
                         <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
+                         <enum>Qt::Orientation::Horizontal</enum>
                         </property>
                         <property name="sizeHint" stdset="0">
                          <size>
@@ -1503,13 +1439,13 @@
                          <number>100</number>
                         </property>
                         <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
+                         <enum>Qt::Orientation::Horizontal</enum>
                         </property>
                         <property name="invertedControls">
                          <bool>false</bool>
                         </property>
                         <property name="tickPosition">
-                         <enum>QSlider::NoTicks</enum>
+                         <enum>QSlider::TickPosition::NoTicks</enum>
                         </property>
                        </widget>
                       </item>
@@ -1523,7 +1459,7 @@
                       <item>
                        <spacer name="horizontalSpacer_17">
                         <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
+                         <enum>Qt::Orientation::Horizontal</enum>
                         </property>
                         <property name="sizeHint" stdset="0">
                          <size>
@@ -1558,10 +1494,10 @@
                    <item>
                     <widget class="QFrame" name="frame_7">
                      <property name="frameShape">
-                      <enum>QFrame::NoFrame</enum>
+                      <enum>QFrame::Shape::NoFrame</enum>
                      </property>
                      <property name="frameShadow">
-                      <enum>QFrame::Plain</enum>
+                      <enum>QFrame::Shadow::Plain</enum>
                      </property>
                      <layout class="QHBoxLayout" name="horizontalLayout_10">
                       <item>
@@ -1677,7 +1613,7 @@
                       <item>
                        <spacer name="horizontalSpacer">
                         <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
+                         <enum>Qt::Orientation::Horizontal</enum>
                         </property>
                         <property name="sizeHint" stdset="0">
                          <size>
@@ -1794,7 +1730,7 @@
                       <item>
                        <spacer name="horizontalSpacer_11">
                         <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
+                         <enum>Qt::Orientation::Horizontal</enum>
                         </property>
                         <property name="sizeHint" stdset="0">
                          <size>
@@ -1807,13 +1743,64 @@
                      </layout>
                     </widget>
                    </item>
+                   <item>
+                    <widget class="QGroupBox" name="groupBox_85">
+                     <property name="title">
+                      <string>Saving</string>
+                     </property>
+                     <layout class="QHBoxLayout" name="horizontalLayout_83">
+                      <item>
+                       <widget class="QLineEdit" name="lineEditSavePath">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>30</height>
+                         </size>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="pushButtonSelectSavePath">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>30</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string>Select Path</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="ThreadPoolPushButton" name="pushButtonSaving">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>30</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>80</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string>Save</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
                   </layout>
                  </widget>
                 </item>
                 <item>
                  <spacer name="verticalSpacer">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -1836,7 +1823,7 @@
                    <item>
                     <widget class="QSplitter" name="splitter_2">
                      <property name="orientation">
-                      <enum>Qt::Vertical</enum>
+                      <enum>Qt::Orientation::Vertical</enum>
                      </property>
                      <widget class="Plot1DCustom" name="widgetPlotSpectrum" native="true">
                       <property name="minimumSize">
@@ -1876,7 +1863,7 @@
                    <item>
                     <spacer name="verticalSpacer_3">
                      <property name="orientation">
-                      <enum>Qt::Vertical</enum>
+                      <enum>Qt::Orientation::Vertical</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -1901,10 +1888,10 @@
       </widget>
       <widget class="QFrame" name="frame_32">
        <property name="frameShape">
-        <enum>QFrame::StyledPanel</enum>
+        <enum>QFrame::Shape::StyledPanel</enum>
        </property>
        <property name="frameShadow">
-        <enum>QFrame::Raised</enum>
+        <enum>QFrame::Shadow::Raised</enum>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_64" stretch="1,0">
         <item>
@@ -1952,7 +1939,7 @@
      <x>0</x>
      <y>0</y>
      <width>1547</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
@@ -1973,7 +1960,7 @@
   <customwidget>
    <class>StackView</class>
    <extends>QWidget</extends>
-   <header>StackView.h</header>
+   <header>StackView</header>
    <container>1</container>
   </customwidget>
   <customwidget>
@@ -1984,30 +1971,30 @@
   <customwidget>
    <class>Plot1DCustom</class>
    <extends>QWidget</extends>
-   <header>plot1D.h</header>
+   <header>plot1D</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>OddSpinBox</class>
    <extends>QSpinBox</extends>
-   <header>widgets.h</header>
+   <header>widgets</header>
   </customwidget>
   <customwidget>
    <class>Plot1D</class>
    <extends>QWidget</extends>
-   <header>plot1D.h</header>
+   <header>plot1D</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>Plot1DHistogram</class>
    <extends>QWidget</extends>
-   <header>plot1D.h</header>
+   <header>plot1D</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ColorBarWidget</class>
    <extends>QWidget</extends>
-   <header>colorbar.h</header>
+   <header>colorbar</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
