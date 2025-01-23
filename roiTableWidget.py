@@ -7,7 +7,7 @@ from silx.gui.plot.items import SymbolMixIn
 from silx.gui import icons
 from silx.gui.utils.concurrent import submitToQtMainThread as _submit
 
-roiClasses = ('PointROI', 'RectangleROI', 'CircleROI')
+roiClasses = ('PointROI', 'RectangleROI', 'CircleROI', 'PolygonROI')
 
 class RegionOfInterestManagerCustom(RegionOfInterestManager):
     sigUpdatedRoi = qt.Signal(object)

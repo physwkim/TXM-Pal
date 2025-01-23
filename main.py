@@ -22,16 +22,14 @@ from silx.gui.plot.items import roi as roi_items
 from silx.gui.utils.concurrent import submitToQtMainThread as _submit
 import h5py
 
-# from utils import fitPeak
 from utils import magnification_corr_factors, find_nearest
 
 from txm_pal_core import quadfit_mc, gaussianfit_mc, phase_cross_correlation_stack, renormalize_absorbance_stack
+from txm_pal_core import create_mask_rs
 from roiTableWidget import RoiTableWidget
 from widgets import MainToolBar
 
 BASE_PATH = os.path.expanduser('~')
-
-from PySide6 import QtWidgets, QtCore
 
 if getattr(sys, 'frozen', False):
     # in exe file
@@ -305,29 +303,20 @@ class Main(qt.QMainWindow):
 
     def getSpectrum(self, roi):
         """Get spectrum from ROI"""
-        ref_size = self.absorbanceImage[0].shape
+        height, width = self.absorbanceImage[0].shape
+
         if isinstance(roi, roi_items.PointROI):
             position = roi.getPosition()
-            if position[0] < 0 or position[1] < 0 or position[0] > ref_size[0] -1 or position[1] > ref_size[1] - 1:
+            if position[0] < 0 or position[1] < 0 or position[0] > height -1 or position[1] > width - 1:
                 self.toLog("out of range!", "red")
             spectrum = self.absorbanceImage[:, floor(position[1]), floor(position[0])]
 
         elif isinstance(roi, roi_items.CircleROI):
-            center = roi.getCenter()
-            radius = roi.getRadius()
-            ref_image = self.absorbanceImage[0]
+            rois = [{'type': 'circle',
+                     'center': tuple(roi.getCenter()),
+                     'radius': roi.getRadius()}]
+            mask = create_mask_rs(width, height, rois).astype(bool)
 
-            mask = np.zeros_like(ref_image, dtype=bool)
-            xStart = floor(center[0] - radius)
-            xStop = ceil(center[0] + radius)
-            yStart = floor(center[1] - radius)
-            yStop = ceil(center[1] + radius)
-
-            for yIdx in range(yStart, yStop):
-                for xIdx in range(xStart, xStop):
-                    if (xIdx - center[0])**2 + (yIdx - center[1])**2 < radius**2:
-                        if yIdx < mask.shape[0] and xIdx < mask.shape[1] and yIdx > 0 and xIdx > 0:
-                            mask[yIdx, xIdx] = True
             # counts for average
             counts = np.sum(mask)
             mask = np.invert(mask)
@@ -336,19 +325,22 @@ class Main(qt.QMainWindow):
             spectrum = np.sum(maskedData, axis=(1, 2)) / counts
 
         elif isinstance(roi, roi_items.RectangleROI):
-            origin = roi.getOrigin()
-            size = roi.getSize()
-            xStart = floor(origin[0])
-            xStop = floor(origin[0] + size[0])
-            yStart = floor(origin[1])
-            yStop = floor(origin[1] + size[1])
+            rois = [{'type': 'rectangle',
+                     'origin': tuple(roi.getOrigin()),
+                     'size': tuple(roi.getSize())}]
+            mask = create_mask_rs(width, height, rois).astype(bool)
 
-            ref_image = self.absorbanceImage[0]
-            mask = np.zeros_like(ref_image, dtype=bool)
-            for yIdx in range(yStart, yStop):
-                for xIdx in range(xStart, xStop):
-                    if yIdx > 0 and yIdx < ref_size[0] and xIdx > 0 and xIdx < ref_size[1]:
-                        mask[yIdx, xIdx] = True
+            # counts for average
+            counts = np.sum(mask)
+            mask = np.invert(mask)
+            maskArray = np.array([mask for _ in range(len(self.energy_list))])
+            maskedData = np.ma.masked_array(self.absorbanceImage, mask=maskArray)
+            spectrum = np.sum(maskedData, axis=(1, 2)) / counts
+
+        elif isinstance(roi, roi_items.PolygonROI):
+            rois = [{'type': 'polygon',
+                     'points': tuple([tuple(point) for point in roi.getPoints()])}]
+            mask = create_mask_rs(width, height, rois).astype(bool)
 
             # counts for average
             counts = np.sum(mask)
