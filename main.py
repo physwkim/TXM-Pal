@@ -22,6 +22,8 @@ from silx.gui.plot.items import roi as roi_items
 from silx.gui.utils.concurrent import submitToQtMainThread as _submit
 import h5py
 
+from pystackreg import StackReg
+
 from utils import magnification_corr_factors, find_nearest
 
 from txm_pal_core import quadfit_mc, gaussianfit_mc, phase_cross_correlation_stack, renormalize_absorbance_stack
@@ -171,6 +173,9 @@ class Main(qt.QMainWindow):
         # Fitting algorithm selection
         self.comboBoxSmoothAlgorithm.currentTextChanged.connect(self.updateSmoothAlgorithm)
 
+        # Paramter activatation for Alighment method
+        self.comboBoxAlignMethod.currentIndexChanged.connect(self.updateAlignParam)
+
         # Adjust splitter ratio
         self.mainSplitter.setSizes([800, 800])
 
@@ -186,6 +191,18 @@ class Main(qt.QMainWindow):
         # Set window icon
         icon_path = os.path.join(application_path, 'mainicon.ico')
         self.setWindowIcon(qt.QIcon(icon_path))
+
+    def updateAlignParam(self, index):
+        print(f"updateAlignParam : {index}")
+        if index == 0:
+            # cross correlation
+            _submit(self.spinBoxUpFactor.setEnabled, True)
+            _submit(self.spinBoxRefNum.setEnabled, True)
+            _submit(self.comboBoxRefType.setEnabled, False)
+        else:
+            _submit(self.spinBoxUpFactor.setEnabled, False)
+            _submit(self.spinBoxRefNum.setEnabled, False)
+            _submit(self.comboBoxRefType.setEnabled, True)
 
     def updateInterpolate(self, idx):
         qsettings = qt.QSettings('settings.ini', qt.QSettings.IniFormat)
@@ -772,16 +789,35 @@ class Main(qt.QMainWindow):
 
             self.toLog("Aligning...")
 
-            ##### Using rust
-            shifts = phase_cross_correlation_stack(self.absorbanceImage.astype(np.float64),
-                                            refImageIdx,
-                                            upsample_factor)
-            self.image_shifts = shifts
-            self.image_shifts_abs = np.linalg.norm(shifts, axis=1)
+            alignMethod = self.comboBoxAlignMethod.currentIndex()
 
-            # Shift images
-            for idx, image in enumerate(self.absorbanceImage):
-                self.absorbanceImage[idx] = shift(image, shifts[idx], mode='constant', cval=-10)
+            if alignMethod == 0:
+                ##### Using rust
+                shifts = phase_cross_correlation_stack(self.absorbanceImage.astype(np.float64),
+                                                refImageIdx,
+                                                upsample_factor)
+                self.image_shifts = shifts
+                self.image_shifts_abs = np.linalg.norm(shifts, axis=1)
+
+                # Shift images
+                for idx, image in enumerate(self.absorbanceImage):
+                    self.absorbanceImage[idx] = shift(image, shifts[idx], mode='constant', cval=-10)
+
+            elif alignMethod == 1:
+                ref_type_enum = ('previous', 'mean', 'first')
+                ref_type = ref_type_enum[self.comboBoxRefType.currentIndex()]
+
+                absorb = self.absorbanceImage.copy()
+                sr = StackReg(StackReg.TRANSLATION)
+                tmat = sr.register_stack(absorb,
+                                         axis=0,
+                                         reference=ref_type,
+                                         verbose=False,)
+
+                self.image_shifts = np.array(list(zip(tmat[:, 1, 2], tmat[:, 0, 2]))) * -1.0
+                self.image_shifts_abs = np.linalg.norm(self.image_shifts, axis=1)
+
+                self.absorbanceImage = sr.transform_stack(absorb)
 
             # To numpy array
             self.image_shifts = np.array(self.image_shifts)

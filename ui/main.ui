@@ -43,7 +43,7 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>0</y>
+             <y>-36</y>
              <width>1000</width>
              <height>1246</height>
             </rect>
@@ -377,7 +377,7 @@
                    <item>
                     <widget class="QDoubleSpinBox" name="doubleSpinBoxMag">
                      <property name="value">
-                      <double>6.000000000000000</double>
+                      <double>25.000000000000000</double>
                      </property>
                     </widget>
                    </item>
@@ -463,6 +463,11 @@
                           <string>Cross-correlation</string>
                          </property>
                         </item>
+                        <item>
+                         <property name="text">
+                          <string>StackReg</string>
+                         </property>
+                        </item>
                        </widget>
                       </item>
                       <item>
@@ -499,19 +504,6 @@
                        </widget>
                       </item>
                       <item>
-                       <spacer name="horizontalSpacer_6">
-                        <property name="orientation">
-                         <enum>Qt::Orientation::Horizontal</enum>
-                        </property>
-                        <property name="sizeHint" stdset="0">
-                         <size>
-                          <width>3</width>
-                          <height>21</height>
-                         </size>
-                        </property>
-                       </spacer>
-                      </item>
-                      <item>
                        <widget class="QLabel" name="label_10">
                         <property name="text">
                          <string>Ref. #</string>
@@ -543,6 +535,35 @@
                          </size>
                         </property>
                        </spacer>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="label_33">
+                        <property name="text">
+                         <string>Reference</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QComboBox" name="comboBoxRefType">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
+                        <item>
+                         <property name="text">
+                          <string>Previous</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>Mean</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>First</string>
+                         </property>
+                        </item>
+                       </widget>
                       </item>
                       <item>
                        <widget class="ThreadPoolPushButton" name="pushButtonAlign">
