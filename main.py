@@ -1178,6 +1178,58 @@ class Main(qt.QMainWindow):
             save_path = str(Path(self.selected_mask_path).parent)
             qsettings.setValue('selected_mask_path', save_path)
 
+class AgreementDialog(qt.QDialog):
+    """Citation Agreement Dialog"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("TXM-Pal Agreement")
+        self.setModal(True)
+        self.setMinimumWidth(500)
+        
+        # Center align dialog and remove help button
+        self.setWindowFlags(self.windowFlags() & ~qt.Qt.WindowContextHelpButtonHint)
+        
+        # Set layout
+        layout = qt.QVBoxLayout(self)
+        
+        # Message label
+        message = (
+            "<p><b>Thank you for downloading TXM-Pal.</b></p>"
+            "<p>Before proceeding, please note that citation of the following "
+            "reference is required when using TXM-Pal in your research, where applicable:</p>"
+            "<p>S. Jo, S. Kim and J. Lim (2025). <i>J. Synchrotron Rad.</i> <b>32</b>, "
+            "https://doi.org/10.1107/S1600577525002036</p>"
+            "<p>This article has not yet been assigned page numbers and should be cited "
+            "using the DOI above.</p>"
+        )
+        
+        label = qt.QLabel(message)
+        label.setWordWrap(True)
+        label.setTextFormat(qt.Qt.RichText)
+        layout.addWidget(label)
+        
+        # Button layout
+        button_layout = qt.QHBoxLayout()
+        layout.addLayout(button_layout)
+        
+        # Add buttons
+        agree_button = qt.QPushButton("Agree")
+        disagree_button = qt.QPushButton("Disagree")
+        
+        button_layout.addStretch(1)
+        button_layout.addWidget(agree_button)
+        button_layout.addWidget(disagree_button)
+        
+        # Connect buttons
+        agree_button.clicked.connect(self.accept)
+        disagree_button.clicked.connect(self.reject)
+
+# Part to be added or modified in main.py
+def show_agreement_dialog():
+    dialog = AgreementDialog()
+    result = dialog.exec()
+    return result == qt.QDialog.Accepted
+
 if __name__ == '__main__':
     app = qt.QApplication(sys.argv)
     app.setStyle('fusion')
@@ -1199,7 +1251,10 @@ if __name__ == '__main__':
 
     app.setPalette(light_palette)
 
-    main = Main()
-    main.show()
-    sys.exit(app.exec())
-
+    # Show agreement dialog and check result
+    if show_agreement_dialog():
+        main = Main()
+        main.show()
+        sys.exit(app.exec())
+    else:
+        sys.exit(0)
