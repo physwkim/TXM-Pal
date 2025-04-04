@@ -40,6 +40,7 @@ else:
     # started in script
     application_path = os.path.dirname(os.path.abspath(__file__))
 
+
 ui_path = os.path.join(application_path, 'ui/main.ui')
 
 class Main(qt.QMainWindow):
@@ -1249,8 +1250,10 @@ if __name__ == '__main__':
     light_palette.setColor(qt.QPalette.Highlight, qt.QColor(0, 120, 215))  # 강조 색상
     light_palette.setColor(qt.QPalette.HighlightedText, qt.QColor(255, 255, 255))
 
-    app.setPalette(light_palette)
 
+    app.setPalette(light_palette)
+    plt.rcParams['font.size'] = 6
+    
     # Show agreement dialog and check result
     if show_agreement_dialog():
         main = Main()
