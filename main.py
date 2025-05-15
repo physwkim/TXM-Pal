@@ -792,9 +792,21 @@ class Main(qt.QMainWindow):
 
             alignMethod = self.comboBoxAlignMethod.currentIndex()
 
+            # Create a copy of absorbanceImage for alignment
+            align_image = self.absorbanceImage.copy()
+
+            # Clip image if alignRangeCheckBox is checked
+            if self.alignRangeCheckBox.isChecked():
+                lower_intensity = self.alignLowerDoubleSpinBox.value()
+                upper_intensity = self.alignUpperDoubleSpinBox.value()
+                
+                # Clip the image data based on intensity values
+                align_image = np.clip(align_image, lower_intensity, upper_intensity)
+
             if alignMethod == 0:
                 ##### Using rust
-                shifts = phase_cross_correlation_stack(self.absorbanceImage.astype(np.float64),
+                
+                shifts = phase_cross_correlation_stack(align_image.astype(np.float64),
                                                 refImageIdx,
                                                 upsample_factor)
                 self.image_shifts = shifts
@@ -808,9 +820,8 @@ class Main(qt.QMainWindow):
                 ref_type_enum = ('previous', 'mean', 'first')
                 ref_type = ref_type_enum[self.comboBoxRefType.currentIndex()]
 
-                absorb = self.absorbanceImage.copy()
                 sr = StackReg(StackReg.TRANSLATION)
-                tmat = sr.register_stack(absorb,
+                tmat = sr.register_stack(align_image,
                                          axis=0,
                                          reference=ref_type,
                                          verbose=False,)
@@ -818,7 +829,7 @@ class Main(qt.QMainWindow):
                 self.image_shifts = np.array(list(zip(tmat[:, 1, 2], tmat[:, 0, 2]))) * -1.0
                 self.image_shifts_abs = np.linalg.norm(self.image_shifts, axis=1)
 
-                self.absorbanceImage = sr.transform_stack(absorb)
+                self.absorbanceImage = sr.transform_stack(self.absorbanceImage)
 
             # To numpy array
             self.image_shifts = np.array(self.image_shifts)
