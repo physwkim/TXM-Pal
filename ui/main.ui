@@ -643,6 +643,69 @@
                        </property>
                       </spacer>
                      </item>
+                     <item>
+                      <widget class="QCheckBox" name="alignROICheckBox">
+                       <property name="text">
+                        <string>Use ROI</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="label_36">
+                       <property name="text">
+                        <string>XStart</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="spinBoxXStartAlign">
+                       <property name="maximum">
+                        <number>3000</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="label_37">
+                       <property name="text">
+                        <string>XStop</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="spinBoxXStopAlign">
+                       <property name="maximum">
+                        <number>3000</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="label_38">
+                       <property name="text">
+                        <string>YStart</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="spinBoxYStartAlign">
+                       <property name="maximum">
+                        <number>3000</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="label_39">
+                       <property name="text">
+                        <string>YStop</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="spinBoxYStopAlign">
+                       <property name="maximum">
+                        <number>3000</number>
+                       </property>
+                      </widget>
+                     </item>
                     </layout>
                    </item>
                    <item>

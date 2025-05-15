@@ -803,6 +803,16 @@ class Main(qt.QMainWindow):
                 # Clip the image data based on intensity values
                 align_image = np.clip(align_image, lower_intensity, upper_intensity)
 
+            # Use ROI for alignment if alignROICheckBox is checked
+            if self.alignROICheckBox.isChecked():
+                x_start = self.spinBoxXStartAlign.value()
+                x_stop = self.spinBoxXStopAlign.value()
+                y_start = self.spinBoxYStartAlign.value()
+                y_stop = self.spinBoxYStopAlign.value()
+                
+                # Extract ROI region for alignment
+                align_image = align_image[:, y_start:y_stop, x_start:x_stop]
+
             if alignMethod == 0:
                 ##### Using rust
                 
