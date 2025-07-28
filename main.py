@@ -1218,11 +1218,11 @@ class AgreementDialog(qt.QDialog):
         message = (
             "<p><b>Thank you for using TXM-Pal.</b></p>"
             "<p>When publishing research that utilizes TXM-Pal or PXM, you are required to cite the publication(s) listed below.</p>"
-            "<p><b>For general use of TXM-Pal:</b><br>"
-            "<i>J. Synchrotron Rad.</i> <b>(2025). 32</b>, 815–822<br>"
+            "<p>For general use of TXM-Pal:<br>"
+            "<b>J. Synchrotron Rad. (2025). 32, 815–822</b><br>"
             "https://doi.org/10.1107/S1600577525002036</p>"
-            "<p><b>For large-field XANES imaging (PXM):</b><br>"
-            "<i>Small Methods</i> <b>9</b>, 2401087 (2025)<br>"
+            "<p>For large-field XANES imaging (PXM):<br>"
+            "<b>Small Methods 9, 2401087 (2025)</b><br>"
             "https://doi.org/10.1002/smtd.202401087</p>"
         )
 
