@@ -1216,15 +1216,16 @@ class AgreementDialog(qt.QDialog):
         
         # Message label
         message = (
-            "<p><b>Thank you for downloading TXM-Pal.</b></p>"
-            "<p>Before proceeding, please note that citation of the following "
-            "reference is required when using TXM-Pal in your research, where applicable:</p>"
-            "<p>S. Jo, S. Kim and J. Lim (2025). <i>J. Synchrotron Rad.</i> <b>32</b>, "
+            "<p><b>Thank you for using TXM-Pal.</b></p>"
+            "<p>When publishing research that utilizes TXM-Pal or PXM, you are required to cite the publication(s) listed below.</p>"
+            "<p><b>For general use of TXM-Pal:</b><br>"
+            "<i>J. Synchrotron Rad.</i> <b>(2025). 32</b>, 815–822<br>"
             "https://doi.org/10.1107/S1600577525002036</p>"
-            "<p>This article has not yet been assigned page numbers and should be cited "
-            "using the DOI above.</p>"
+            "<p><b>For large-field XANES imaging (PXM):</b><br>"
+            "<i>Small Methods</i> <b>9</b>, 2401087 (2025)<br>"
+            "https://doi.org/10.1002/smtd.202401087</p>"
         )
-        
+
         label = qt.QLabel(message)
         label.setWordWrap(True)
         label.setTextFormat(qt.Qt.RichText)
