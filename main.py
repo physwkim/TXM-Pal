@@ -43,6 +43,18 @@ else:
 
 ui_path = os.path.join(application_path, 'ui/main.ui')
 
+
+class WheelFilter(qt.QObject):
+    """Event filter that blocks wheel events on input widgets."""
+    def eventFilter(self, obj, event):
+        if event.type() == qt.QEvent.Wheel:
+            if isinstance(obj, (qt.QSpinBox, qt.QDoubleSpinBox,
+                                qt.QComboBox, qt.QSlider)):
+                event.ignore()
+                return True
+        return False
+
+
 class Main(qt.QMainWindow):
     """Main Window"""
 
@@ -1256,6 +1268,7 @@ def show_agreement_dialog():
 if __name__ == '__main__':
     app = qt.QApplication(sys.argv)
     app.setStyle('fusion')
+    app.installEventFilter(WheelFilter(app))
 
     light_palette = qt.QPalette()
 
