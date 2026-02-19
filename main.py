@@ -738,9 +738,8 @@ class Main(qt.QMainWindow):
             image_post_edge = np.mean(self._preprocessImage[-num_post_edge:], axis=0)
             thickness = image_post_edge - image_pre_edge
             self.thickness_image = thickness
-            self.widgetImageStack.setStack(self.thickness_image)
-            plot = self.widgetImageStack.getPlotWidget()
-            _submit(plot.setGraphTitle, "Edge jump")
+            _submit(self.widgetImageStack.setStack, self.thickness_image)
+            _submit(self.widgetImageStack.getPlotWidget().setGraphTitle, "Edge jump")
             self.toLog("Calculating thickness... done")
         else:
             self.toLog("Please load images first", "red")
@@ -944,8 +943,8 @@ class Main(qt.QMainWindow):
                     self.middle_index = len(self.energy_list) // 2
 
                     # Set reference image
-                    self.spinBoxRefNum.setMinimum(0)
-                    self.spinBoxRefNum.setMaximum(len(self.energy_list) - 1)
+                    _submit(self.spinBoxRefNum.setMinimum, 0)
+                    _submit(self.spinBoxRefNum.setMaximum, len(self.energy_list) - 1)
                     _submit(self.spinBoxRefNum.setValue, self.middle_index)
 
                     _submit(self.widgetPlotShift.setGraphXLimits, minEnergy, maxEnergy)
@@ -1019,8 +1018,8 @@ class Main(qt.QMainWindow):
                 self.middle_index = len(self.energy_list) // 2
 
                 # Set reference image
-                self.spinBoxRefNum.setMinimum(0)
-                self.spinBoxRefNum.setMaximum(len(self.energy_list) - 1)
+                _submit(self.spinBoxRefNum.setMinimum, 0)
+                _submit(self.spinBoxRefNum.setMaximum, len(self.energy_list) - 1)
                 _submit(self.spinBoxRefNum.setValue, self.middle_index)
 
                 _submit(self.widgetPlotShift.setGraphXLimits, minEnergy, maxEnergy)
