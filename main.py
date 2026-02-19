@@ -820,7 +820,13 @@ class Main(qt.QMainWindow):
                 x_stop = self.spinBoxXStopAlign.value()
                 y_start = self.spinBoxYStartAlign.value()
                 y_stop = self.spinBoxYStopAlign.value()
-                
+
+                _, h, w = align_image.shape
+                x_start = max(0, min(x_start, w - 1))
+                x_stop = max(x_start + 1, min(x_stop, w))
+                y_start = max(0, min(y_start, h - 1))
+                y_stop = max(y_start + 1, min(y_stop, h))
+
                 # Extract ROI region for alignment
                 align_image = align_image[:, y_start:y_stop, x_start:x_stop]
 
